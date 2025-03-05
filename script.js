@@ -1,23 +1,22 @@
 const API_BASE_URL = 'http://localhost:3000';
 
-// Check if user is authenticated
+// Check if user is authenticated and add token to requests
 async function checkAuthState() {
     try {
         console.log('Checking authentication state...');
         
-        // Check if Amplify is properly loaded
-        if (typeof Amplify === 'undefined') {
-            console.error('Amplify is not defined - cannot authenticate');
-            return;
+        if (!window.Auth.isAuthenticated()) {
+            console.log('User not authenticated, redirecting to login');
+            window.Auth.redirectToLogin();
+            return false;
         }
         
-        const user = await Amplify.Auth.currentAuthenticatedUser();
-        console.log('User is signed in:', user);
-        // No need to redirect if already authenticated
+        console.log('User is authenticated');
+        return true;
     } catch (error) {
-        console.log('User not authenticated:', error.message);
-        // Uncomment when ready to enforce login
-        Amplify.Auth.federatedSignIn();
+        console.error('Authentication check error:', error.message);
+        window.Auth.redirectToLogin();
+        return false;
     }
 }
 
@@ -60,6 +59,11 @@ function updateAssetId() {
 }
 
 async function searchVehicle() {
+    // First check if the user is authenticated
+    if (!await checkAuthState()) {
+        return;
+    }
+
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const rfidInput = document.getElementById('rfidInput').value.trim();
@@ -73,19 +77,10 @@ async function searchVehicle() {
     }
 
     try {
-        // First, handle login
-        console.log('Attempting login...'); // Debug log
-        const loginResponse = await fetch(`${API_BASE_URL}/api/login`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-
-        if (!loginResponse.ok) {
-            throw new Error(`Login failed: ${loginResponse.statusText}`);
+        // Get access token to include in requests
+        const token = window.Auth.getAccessToken();
+        if (!token) {
+            throw new Error('No access token available');
         }
 
         const formatDate = (dateString) => {
@@ -119,11 +114,18 @@ async function searchVehicle() {
         console.log('Sending request with params:', params.toString());
 
         const response = await fetch(`${API_BASE_URL}/api/getData?${params}`, {
-            credentials: 'include',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
+
+        if (response.status === 401 || response.status === 403) {
+            console.log('Authentication token expired or invalid, refreshing...');
+            await window.Auth.refreshToken();
+            // Retry the request after token refresh
+            return searchVehicle();
+        }
 
         if (!response.ok) {
             throw new Error(`Data fetch failed: ${response.statusText}`);
@@ -146,12 +148,15 @@ async function searchVehicle() {
             message: error.message,
             stack: error.stack
         });
-        alert(error.message || 'Error fetching data');
+        
+        if (error.message.includes('token') || error.message.includes('auth')) {
+            // Handle authentication errors
+            window.Auth.redirectToLogin();
+        } else {
+            alert(error.message || 'Error fetching data');
+        }
     }
 }
-
-
-
 
 // Also update the date picker initialization
 flatpickr("#dateFrom", {
@@ -169,8 +174,6 @@ flatpickr("#dateTo", {
     defaultHour: 23,
     defaultMinute: 59
 });
-
-
 
 function displayDataOnMap(data) {
     // Clear existing markers
@@ -272,11 +275,6 @@ function displayDataOnMap(data) {
     console.log(`Displayed ${validPoints.length} points on the map`);
 }
 
-
-
-
-
-
 function hexToDecimal(hexString) {
     // Remove any leading "0x" if present and convert to uppercase
     hexString = hexString.replace(/^0x/i, '').toUpperCase();
@@ -288,7 +286,5 @@ function decimalToHex(decimalString) {
     // Convert decimal to hex, remove "0x" prefix and pad with zeros if needed
     return BigInt(decimalString).toString(16).toUpperCase().padStart(8, '0');
 }
-
-
 
 document.addEventListener('DOMContentLoaded', checkAuthState);

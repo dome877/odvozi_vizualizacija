@@ -9,9 +9,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Loading indicator for authentication -->
+    <div id="loading" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255,255,255,0.8); z-index: 9999; text-align: center; padding-top: 20%;">
+        <h2>Authenticating...</h2>
+        <p>Please wait while we verify your credentials.</p>
+    </div>
+
+    <div id="app" class="container">
         <div class="sidebar">
             <h1>Vehicle Tracking</h1>
+            <div class="user-info">
+                <button id="logoutBtn" onclick="window.Auth.logout()">Logout</button>
+            </div>
             <div class="filter-container">
                 <div class="date-picker">
                     <label for="dateFrom">From:</label>
@@ -51,6 +60,45 @@
     </div>
     
     <script src="auth.js"></script>
+    <script>
+    // Export Auth functions to make them globally accessible
+    window.Auth = {
+        isAuthenticated,
+        redirectToLogin,
+        logout,
+        initAuth,
+        debugTokens
+    };
+    
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        const loadingDiv = document.getElementById('loading');
+        const appDiv = document.getElementById('app');
+        
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        if (appDiv) appDiv.style.display = 'none';
+        
+        try {
+            // Initialize authentication
+            const isAuthed = await initAuth();
+            
+            if (isAuthed) {
+                console.log('User is authenticated');
+                if (appDiv) appDiv.style.display = 'block';
+                // Setup token refresh to keep the session valid
+                setupTokenRefresh();
+            } else {
+                console.log('Authentication failed');
+                // initAuth will handle the redirect
+            }
+        } catch (error) {
+            console.error('Authentication error:', error);
+            alert('Authentication error: ' + error.message);
+        } finally {
+            if (loadingDiv) loadingDiv.style.display = 'none';
+        }
+    });
+    </script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="script.js"></script>
