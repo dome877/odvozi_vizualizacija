@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Tracking GIS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Vehicle Tracking</h1>
+            <div class="filter-container">
+                <div class="date-picker">
+                    <label for="dateFrom">From:</label>
+                    <input type="text" id="dateFrom" placeholder="Select start date...">
+                    
+                    <label for="dateTo">To:</label>
+                    <input type="text" id="dateTo" placeholder="Select end date...">
+                </div>
+
+                <div class="vehicle-select">
+                    <label for="vehicleSelect">Select Vehicle:</label>
+                    <select id="vehicleSelect" onchange="updateAssetId()">
+                        <option value="">Select a vehicle...</option>
+                        <option value="1770">ŠI-181GO (Mercedes Atego)</option>
+                        <option value="1952">ŠI-237HO (MAN TGM)</option>
+                        <option value="2364">ŠI-315IU (Volvo)</option>
+                        <option value="1953">ŠI-319HS (MAN Le 8.150)</option>
+                        <option value="1954">ŠI-522FF (MAN TGM)</option>
+                        <option value="1771">ŠI-523FF (MAN)</option>
+                        <option value="11">ŠI-883DK (MAN)</option>
+                        <option value="1769">ŠI-884DK (MAN)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="rfidInput">RFID:</label>
+                    <input type="text" id="rfidInput" placeholder="Enter RFID...">
+                </div>
+
+                <div class="input-group">
+                    <input type="hidden" id="assetId" readonly>
+                </div>
+
+                <button onclick="searchVehicle()">Track Vehicle</button>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/aws-amplify@5.0.4/dist/aws-amplify.min.js"></script>
+    <script src="aws-config.js" type="module"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="script.js"></script>
+</body>
+</html>
