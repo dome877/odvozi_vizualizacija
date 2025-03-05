@@ -5,19 +5,23 @@ async function checkAuthState() {
     try {
         console.log('Checking authentication state...');
         
-        // Check if Amplify is properly loaded
-        if (typeof Amplify === 'undefined') {
-            console.error('Amplify is not defined - cannot authenticate');
+        // Initialize authentication using Auth.js
+        if (typeof window.Auth === 'undefined') {
+            console.error('Auth module is not defined - cannot authenticate');
             return;
         }
         
-        const user = await Amplify.Auth.currentAuthenticatedUser();
-        console.log('User is signed in:', user);
-        // No need to redirect if already authenticated
+        // Use the Auth.js to check authentication
+        const isAuthenticated = await window.Auth.initAuth();
+        console.log('Authentication check completed:', isAuthenticated ? 'Authenticated' : 'Not authenticated');
+        
+        // Setup automatic token refresh
+        if (isAuthenticated) {
+            window.Auth.setupTokenRefresh();
+        }
     } catch (error) {
-        console.log('User not authenticated:', error.message);
-        // Uncomment when ready to enforce login
-        Amplify.Auth.federatedSignIn();
+        console.error('Authentication error:', error);
+        // If auth fails, user will be redirected to login by Auth.js
     }
 }
 
@@ -73,19 +77,19 @@ async function searchVehicle() {
     }
 
     try {
-        // First, handle login
-        console.log('Attempting login...'); // Debug log
-        const loginResponse = await fetch(`${API_BASE_URL}/api/login`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+        // Check authentication before making the API call
+        if (!window.Auth.isAuthenticated()) {
+            console.log('User not authenticated, redirecting to login...');
+            window.Auth.redirectToLogin();
+            return;
+        }
 
-        if (!loginResponse.ok) {
-            throw new Error(`Login failed: ${loginResponse.statusText}`);
+        // Get the ID token for authentication
+        const idToken = window.Auth.getIdToken();
+        if (!idToken) {
+            console.error('No ID token available');
+            window.Auth.redirectToLogin();
+            return;
         }
 
         const formatDate = (dateString) => {
@@ -118,12 +122,20 @@ async function searchVehicle() {
 
         console.log('Sending request with params:', params.toString());
 
+        // Make API call with authentication token
         const response = await fetch(`${API_BASE_URL}/api/getData?${params}`, {
-            credentials: 'include',
             headers: {
+                'Authorization': `Bearer ${idToken}`,
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
+
+        // Handle authentication errors
+        if (response.status === 401 || response.status === 403) {
+            console.error('Authentication error:', response.status);
+            window.Auth.redirectToLogin();
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(`Data fetch failed: ${response.statusText}`);
@@ -146,12 +158,16 @@ async function searchVehicle() {
             message: error.message,
             stack: error.stack
         });
-        alert(error.message || 'Error fetching data');
+        
+        // Handle other errors gracefully
+        if (error.message.includes('token') || error.message.includes('auth')) {
+            // If it's an authentication-related error, redirect to login
+            window.Auth.redirectToLogin();
+        } else {
+            alert(error.message || 'Error fetching data');
+        }
     }
 }
-
-
-
 
 // Also update the date picker initialization
 flatpickr("#dateFrom", {
@@ -169,8 +185,6 @@ flatpickr("#dateTo", {
     defaultHour: 23,
     defaultMinute: 59
 });
-
-
 
 function displayDataOnMap(data) {
     // Clear existing markers
@@ -272,11 +286,6 @@ function displayDataOnMap(data) {
     console.log(`Displayed ${validPoints.length} points on the map`);
 }
 
-
-
-
-
-
 function hexToDecimal(hexString) {
     // Remove any leading "0x" if present and convert to uppercase
     hexString = hexString.replace(/^0x/i, '').toUpperCase();
@@ -289,6 +298,10 @@ function decimalToHex(decimalString) {
     return BigInt(decimalString).toString(16).toUpperCase().padStart(8, '0');
 }
 
+// Add a logout button handler
+function handleLogout() {
+    window.Auth.logout();
+}
 
-
+// Initialize the application with authentication check
 document.addEventListener('DOMContentLoaded', checkAuthState);
