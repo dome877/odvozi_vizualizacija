@@ -120,7 +120,8 @@ async function exchangeCodeForTokens(authorizationCode) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        code: authorizationCode
+        code: authorizationCode,
+        redirectUri: CONFIG.redirectUri
       })
     });
     
