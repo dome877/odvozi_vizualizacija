@@ -19,6 +19,7 @@
         <div class="sidebar">
             <h1>Vehicle Tracking</h1>
             <div class="user-info">
+                <button id="debugBtn" onclick="window.Auth.debugTokens()" style="background-color: #2ecc71; margin-right: 5px;">Debug Tokens</button>
                 <button id="logoutBtn" onclick="window.Auth.logout()">Logout</button>
             </div>
             <div class="filter-container">
@@ -67,7 +68,12 @@
         redirectToLogin,
         logout,
         initAuth,
-        debugTokens
+        debugTokens,
+        getAccessToken,
+        getIdToken,
+        getRefreshToken,
+        refreshToken,
+        setupTokenRefresh
     };
     
     // Check authentication on page load

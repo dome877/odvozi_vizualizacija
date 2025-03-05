@@ -9,6 +9,9 @@ const CONFIG = {
   scope: 'email openid phone'
 };
 
+// Make config accessible to other scripts
+window.AUTH_CONFIG = CONFIG;
+
 // Track if we've already processed the code
 let authCodeProcessed = false;
 
@@ -250,28 +253,44 @@ async function refreshToken() {
 }
 
 function debugTokens() {
-  console.log("Checking all possible token locations:");
+  console.log("===== Auth Debug Information =====");
+  console.log("Is Authenticated:", isAuthenticated());
+  console.log("Is Token Expired:", isTokenExpired());
   
-  // Check localStorage with different possible key names
-  const localStorageKeys = ["idToken", "id_token", "token", "auth", "authentication"];
-  localStorageKeys.forEach(key => {
-    const value = localStorage.getItem(key);
-    if (value) console.log(`Found in localStorage['${key}']: ${value.substring(0, 10)}...`);
-  });
+  // Check token expiration
+  const expiration = localStorage.getItem('tokenExpiration');
+  if (expiration) {
+    const expirationTime = new Date(parseInt(expiration));
+    const now = new Date();
+    const timeUntilExpiry = expirationTime - now;
+    console.log(`Token expires at: ${expirationTime.toLocaleString()}`);
+    console.log(`Time until expiry: ${Math.floor(timeUntilExpiry / 60000)} minutes`);
+  } else {
+    console.log("No token expiration found");
+  }
   
-  // Check sessionStorage
-  const sessionStorageKeys = ["idToken", "id_token", "token", "auth", "authentication"];
-  sessionStorageKeys.forEach(key => {
-    const value = sessionStorage.getItem(key);
-    if (value) console.log(`Found in sessionStorage['${key}']: ${value.substring(0, 10)}...`);
-  });
+  // Check localStorage 
+  const idToken = getIdToken();
+  const accessToken = getAccessToken();
+  const refreshToken = getRefreshToken();
   
-  // Look for common objects in window scope
-  if (window.auth && window.auth.token) console.log("Found in window.auth.token");
-  if (window.authToken) console.log("Found in window.authToken");
+  console.log("ID Token exists:", !!idToken);
+  if (idToken) console.log("ID Token preview:", idToken.substring(0, 15) + "..." + idToken.substring(idToken.length - 10));
   
-  // Check document cookies
-  console.log("Cookies:", document.cookie);
+  console.log("Access Token exists:", !!accessToken);
+  if (accessToken) console.log("Access Token preview:", accessToken.substring(0, 15) + "..." + accessToken.substring(accessToken.length - 10));
+  
+  console.log("Refresh Token exists:", !!refreshToken);
+  if (refreshToken) console.log("Refresh Token preview:", refreshToken.substring(0, 15) + "..." + refreshToken.substring(refreshToken.length - 10));
+  
+  // Display in an alert for easy viewing
+  alert(`Auth Debug:
+- Authenticated: ${isAuthenticated()}
+- Token Expired: ${isTokenExpired()}
+- ID Token: ${idToken ? "Present" : "Missing"}
+- Access Token: ${accessToken ? "Present" : "Missing"}
+- Refresh Token: ${refreshToken ? "Present" : "Missing"}
+(See console for full details)`);
 }
 
 // Only run once when the page loads
@@ -283,8 +302,11 @@ window.Auth = {
   isAuthenticated,
   getIdToken,
   getAccessToken,
+  getRefreshToken,
   logout,
   redirectToLogin,
+  debugTokens,
+  refreshToken,
   setupTokenRefresh,
-  debugTokens
+  isTokenExpired
 };
