@@ -2,10 +2,10 @@
 
 // Configuration
 const CONFIG = {
-  cognitoUrl: 'https://eu-north-1bad4kil2h.auth.eu-north-1.amazoncognito.com',
-  clientId: 'sufnmmml754ju6m6en2cerr4t',
+  cognitoUrl: 'https://eu-north-1bad4kil2h.auth.eu-north-1.amazoncognito.com/',
+  clientId: '1ue5ecudvmsaoa86g9ndfrt09p',
   redirectUri: window.location.origin + window.location.pathname,
-  tokenExchangeUrl: 'https://0izwpxiog3.execute-api.eu-north-1.amazonaws.com/prod/token-exchange', // Update with your API Gateway URL
+  tokenExchangeUrl: 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev/token-exchange', // Update with your API Gateway URL
   scope: 'email openid phone'
 };
 
