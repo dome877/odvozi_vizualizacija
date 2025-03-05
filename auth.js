@@ -4,13 +4,17 @@
 const CONFIG = {
   cognitoUrl: 'https://eu-north-1bad4kil2h.auth.eu-north-1.amazoncognito.com/',
   clientId: '1ue5ecudvmsaoa86g9ndfrt09p',
-  redirectUri: window.location.origin + window.location.pathname,
-  tokenExchangeUrl: 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev/token-exchange', // Update with your API Gateway URL
+  redirectUri: window.location.origin + window.location.pathname, // This should match the Lambda's REDIRECT_URI
+  tokenExchangeUrl: 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev/token-exchange',
+  apiUrl: 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev', // Base API URL
   scope: 'email openid phone'
 };
 
 // Make config accessible to other scripts
 window.AUTH_CONFIG = CONFIG;
+
+// Log the actual redirect URI that's being used
+console.log('Using redirect URI:', CONFIG.redirectUri);
 
 // Track if we've already processed the code
 let authCodeProcessed = false;
@@ -238,13 +242,16 @@ function setupTokenRefresh() {
 async function refreshToken() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) {
+    console.error('No refresh token available');
     redirectToLogin();
     return;
   }
   
   try {
-    // This would be another endpoint in your Lambda
-    // For now, just redirect to login if token is expired
+    // Note: For a complete implementation, you would need a separate Lambda endpoint 
+    // to handle token refresh. For now, we'll just redirect to login
+    console.log('Refresh token implementation needed in the future');
+    // For the time being, just redirect to the login page
     redirectToLogin();
   } catch (error) {
     console.error('Token refresh error:', error);

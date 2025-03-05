@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Diagnosis</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #45a049; }
+        .test-group { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        .url-display { word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Diagnosis Tool</h1>
+    <p>Use this page to diagnose authentication issues with your application.</p>
+    
+    <div class="test-group">
+        <h2>Environment Information</h2>
+        <p><strong>Current URL:</strong> <span id="currentUrl" class="url-display"></span></p>
+        <p><strong>Origin:</strong> <span id="originUrl"></span></p>
+        <p><strong>Pathname:</strong> <span id="pathUrl"></span></p>
+        <p><strong>Redirect URI Used:</strong> <span id="redirectUri" class="url-display"></span></p>
+    </div>
+    
+    <div class="test-group">
+        <h2>Authentication Status</h2>
+        <p><strong>Authenticated:</strong> <span id="authStatus">Checking...</span></p>
+        <p><strong>Token Expired:</strong> <span id="tokenExpiry">Checking...</span></p>
+        <button id="checkAuth">Check Authentication</button>
+        <button id="debugTokens">Debug Tokens</button>
+    </div>
+    
+    <div class="test-group">
+        <h2>Token Information</h2>
+        <p><strong>ID Token:</strong> <span id="idTokenStatus">Checking...</span></p>
+        <p><strong>Access Token:</strong> <span id="accessTokenStatus">Checking...</span></p>
+        <p><strong>Refresh Token:</strong> <span id="refreshTokenStatus">Checking...</span></p>
+        <p><strong>Token Expiration:</strong> <span id="expirationTime">Checking...</span></p>
+    </div>
+    
+    <div class="test-group">
+        <h2>Authentication Actions</h2>
+        <button id="loginBtn">Log In</button>
+        <button id="logoutBtn">Log Out</button>
+        <button id="clearTokens">Clear All Tokens</button>
+    </div>
+    
+    <div class="test-group">
+        <h2>API Test</h2>
+        <p>Test a simple API call to check if your token is working:</p>
+        <button id="testApi">Test API Call</button>
+        <div>
+            <h3>Response:</h3>
+            <pre id="apiResponse">No response yet</pre>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display environment info
+            document.getElementById('currentUrl').textContent = window.location.href;
+            document.getElementById('originUrl').textContent = window.location.origin;
+            document.getElementById('pathUrl').textContent = window.location.pathname;
+            
+            // If AUTH_CONFIG exists, show the redirect URI
+            if (window.AUTH_CONFIG) {
+                document.getElementById('redirectUri').textContent = window.AUTH_CONFIG.redirectUri;
+            } else {
+                document.getElementById('redirectUri').textContent = 'AUTH_CONFIG not found';
+            }
+            
+            // Check authentication status
+            function updateAuthStatus() {
+                try {
+                    const isAuthed = window.Auth.isAuthenticated();
+                    document.getElementById('authStatus').textContent = isAuthed ? 'Yes ✓' : 'No ✗';
+                    document.getElementById('authStatus').className = isAuthed ? 'success' : 'error';
+                    
+                    const isExpired = window.Auth.isTokenExpired();
+                    document.getElementById('tokenExpiry').textContent = isExpired ? 'Yes ✗' : 'No ✓';
+                    document.getElementById('tokenExpiry').className = !isExpired ? 'success' : 'error';
+                    
+                    // Check tokens
+                    const idToken = window.Auth.getIdToken();
+                    document.getElementById('idTokenStatus').textContent = idToken ? 'Present ✓' : 'Missing ✗';
+                    document.getElementById('idTokenStatus').className = idToken ? 'success' : 'error';
+                    
+                    const accessToken = window.Auth.getAccessToken();
+                    document.getElementById('accessTokenStatus').textContent = accessToken ? 'Present ✓' : 'Missing ✗';
+                    document.getElementById('accessTokenStatus').className = accessToken ? 'success' : 'error';
+                    
+                    const refreshToken = window.Auth.getRefreshToken();
+                    document.getElementById('refreshTokenStatus').textContent = refreshToken ? 'Present ✓' : 'Missing ✗';
+                    document.getElementById('refreshTokenStatus').className = refreshToken ? 'success' : 'error';
+                    
+                    // Check expiration
+                    const expiration = localStorage.getItem('tokenExpiration');
+                    if (expiration) {
+                        const expirationTime = new Date(parseInt(expiration));
+                        const now = new Date();
+                        const timeUntilExpiry = expirationTime - now;
+                        const minutesLeft = Math.floor(timeUntilExpiry / 60000);
+                        
+                        document.getElementById('expirationTime').textContent = 
+                            `${expirationTime.toLocaleString()} (${minutesLeft} minutes left)`;
+                        document.getElementById('expirationTime').className = minutesLeft > 0 ? 'success' : 'error';
+                    } else {
+                        document.getElementById('expirationTime').textContent = 'No expiration found';
+                        document.getElementById('expirationTime').className = 'error';
+                    }
+                } catch (error) {
+                    console.error('Error checking auth status:', error);
+                    document.getElementById('authStatus').textContent = 'Error: ' + error.message;
+                    document.getElementById('authStatus').className = 'error';
+                }
+            }
+            
+            // Initial status check
+            updateAuthStatus();
+            
+            // Button event listeners
+            document.getElementById('checkAuth').addEventListener('click', updateAuthStatus);
+            
+            document.getElementById('debugTokens').addEventListener('click', function() {
+                if (window.Auth && window.Auth.debugTokens) {
+                    window.Auth.debugTokens();
+                } else {
+                    alert('Debug tokens function not available');
+                }
+            });
+            
+            document.getElementById('loginBtn').addEventListener('click', function() {
+                if (window.Auth && window.Auth.redirectToLogin) {
+                    window.Auth.redirectToLogin();
+                } else {
+                    alert('Login function not available');
+                }
+            });
+            
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (window.Auth && window.Auth.logout) {
+                    window.Auth.logout();
+                } else {
+                    alert('Logout function not available');
+                }
+            });
+            
+            document.getElementById('clearTokens').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all tokens? This will log you out.')) {
+                    localStorage.removeItem('idToken');
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('tokenExpiration');
+                    alert('All tokens cleared');
+                    updateAuthStatus();
+                }
+            });
+            
+            document.getElementById('testApi').addEventListener('click', async function() {
+                const responseElem = document.getElementById('apiResponse');
+                responseElem.textContent = 'Testing API...';
+                
+                try {
+                    const idToken = window.Auth.getIdToken();
+                    if (!idToken) {
+                        throw new Error('No ID token available');
+                    }
+                    
+                    const apiUrl = window.AUTH_CONFIG ? 
+                        `${window.AUTH_CONFIG.apiUrl}/test` : 
+                        'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev/test';
+                    
+                    const response = await fetch(apiUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`API call failed: ${response.status} ${response.statusText}. ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    responseElem.textContent = JSON.stringify(data, null, 2);
+                } catch (error) {
+                    console.error('API test error:', error);
+                    responseElem.textContent = `Error: ${error.message}`;
+                    responseElem.className = 'error';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

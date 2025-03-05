@@ -1,5 +1,5 @@
-// Get API Gateway URL from auth.js config if available
-const API_BASE_URL = window.AUTH_CONFIG ? window.AUTH_CONFIG.tokenExchangeUrl.split('/token-exchange')[0] : 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev';
+// Get API Gateway URL from auth.js config
+const API_BASE_URL = window.AUTH_CONFIG ? window.AUTH_CONFIG.apiUrl : 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev';
 
 // Check if user is authenticated and add token to requests
 async function checkAuthState() {
@@ -70,7 +70,7 @@ async function searchVehicle() {
     const rfidInput = document.getElementById('rfidInput').value.trim();
     const assetId = document.getElementById('assetId').value;
 
-    console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId }); // Debug log
+    console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId });
 
     if (!dateFrom || !dateTo) {
         alert('Please select dates');
@@ -81,14 +81,12 @@ async function searchVehicle() {
         // Debug auth state and token
         console.log('Auth state:', window.Auth.isAuthenticated());
         
-        // Get the ID token instead of access token for API Gateway
-        // API Gateway typically validates JWT tokens from Cognito
+        // Get the ID token for API Gateway
         const token = window.Auth.getIdToken(); 
         console.log('ID token found:', !!token, 'length:', token ? token.length : 0);
         
         if (!token) {
             console.error('No ID token available');
-            // Force reauth
             window.Auth.redirectToLogin();
             return;
         }
@@ -102,9 +100,7 @@ async function searchVehicle() {
             const minutes = String(date.getMinutes()).padStart(2, '0');
             
             const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:00`;
-            
             console.log('Formatting date:', dateString, '→', formattedDate);
-            
             return formattedDate;
         };
 
@@ -123,83 +119,54 @@ async function searchVehicle() {
 
         console.log('Sending request with params:', params.toString());
         
-        // AWS API Gateway typically expects the token without 'Bearer '
-        // But we'll try both formats
-        const authHeader = token; // Try without 'Bearer ' prefix first
-        console.log('Using token format without Bearer prefix');
-
-        // For AWS API Gateway, construct the URL correctly
-        // AWS API Gateway endpoints typically don't include /api in the path
+        // API Gateway endpoints
         const apiUrl = `${API_BASE_URL}/getData`;
         console.log('Using API URL:', apiUrl);
 
+        // Try with standard Bearer token format first (most common for API Gateway)
+        console.log('Using standard Bearer token format');
         const response = await fetch(`${apiUrl}?${params}`, {
             headers: {
-                'Authorization': authHeader,
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
         
-        // If unauthorized and we didn't use Bearer prefix, try with it
+        console.log('Response status:', response.status, response.statusText);
+
+        // Handle authentication errors
         if (response.status === 401 || response.status === 403) {
-            console.log('First attempt failed. Trying with Bearer prefix...');
-            const bearerResponse = await fetch(`${apiUrl}?${params}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (bearerResponse.status === 200) {
-                console.log('Request succeeded with Bearer prefix');
-                const data = await bearerResponse.json();
-                displayDataOnMap(data);
+            console.log('Authentication failed. Trying to refresh token...');
+            try {
+                await window.Auth.refreshToken();
+                console.log('Token refreshed, retrying request...');
+                return searchVehicle(); // Retry with fresh token
+            } catch (refreshError) {
+                console.error('Token refresh failed:', refreshError);
+                window.Auth.redirectToLogin();
                 return;
-            } else {
-                console.log('Both auth formats failed. Token might be invalid.');
-                if (window.Auth.isTokenExpired()) {
-                    console.log('Token is expired, refreshing...');
-                    await window.Auth.refreshToken();
-                    return searchVehicle();
-                } else {
-                    throw new Error('Authentication failed with both token formats');
-                }
             }
         }
-        
-        console.log('Response status:', response.status, response.statusText);
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error('API Error Response:', errorText);
-            throw new Error(`Data fetch failed: ${response.statusText}. Details: ${errorText}`);
+            throw new Error(`API request failed: ${response.status} ${response.statusText}. Details: ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('Response headers:', Object.fromEntries([...response.headers.entries()])); // Debug log
         console.log('Raw response from server:', data);
-        console.log('Response type:', typeof data); // Debug log
-        console.log('Response structure:', {
-            isArray: Array.isArray(data),
-            hasRoot: data?.root !== undefined,
-            length: Array.isArray(data) ? data.length : (data?.root?.length || 0)
-        });
-
         displayDataOnMap(data);
 
     } catch (error) {
-        console.error('Detailed error:', {
-            message: error.message,
-            stack: error.stack
-        });
+        console.error('Request error:', error.message);
         
         if (error.message.includes('token') || error.message.includes('auth')) {
             // Handle authentication errors
+            alert('Authentication error. Please log in again.');
             window.Auth.redirectToLogin();
         } else {
-            alert(error.message || 'Error fetching data');
+            alert(`Error: ${error.message}`);
         }
     }
 }
