@@ -22,57 +22,6 @@
     text-align: center;
 }
 
-/* User authentication styles */
-.user-info {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 15px;
-}
-
-#logoutBtn {
-    padding: 8px 12px;
-    font-size: 14px;
-    background-color: #e74c3c;
-    margin-top: 0;
-}
-
-#logoutBtn:hover {
-    background-color: #c0392b;
-}
-
-#loading {
-    color: #2c3e50;
-}
-
-#loading h2 {
-    margin-bottom: 10px;
-    font-size: 24px;
-}
-
-.error-message {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 5px;
-    padding: 15px;
-    margin: 15px 0;
-    color: #721c24;
-}
-
-.error-message h3 {
-    margin-bottom: 10px;
-}
-
-.error-message button {
-    background-color: #dc3545;
-    margin-top: 15px;
-}
-
-.error-message button:hover {
-    background-color: #bd2130;
-}
-
-/* End of authentication styles */
-
 .filter-container {
     display: flex;
     flex-direction: column;

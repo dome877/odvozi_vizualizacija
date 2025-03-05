@@ -1,23 +1,23 @@
-// Get API Gateway URL from auth.js config
-const API_BASE_URL = window.AUTH_CONFIG ? window.AUTH_CONFIG.apiUrl : 'https://x4tnkn4ueb.execute-api.eu-north-1.amazonaws.com/dev';
+const API_BASE_URL = 'http://localhost:3000';
 
-// Check if user is authenticated and add token to requests
+// Check if user is authenticated
 async function checkAuthState() {
     try {
         console.log('Checking authentication state...');
         
-        if (!window.Auth.isAuthenticated()) {
-            console.log('User not authenticated, redirecting to login');
-            window.Auth.redirectToLogin();
-            return false;
+        // Check if Amplify is properly loaded
+        if (typeof Amplify === 'undefined') {
+            console.error('Amplify is not defined - cannot authenticate');
+            return;
         }
         
-        console.log('User is authenticated');
-        return true;
+        const user = await Amplify.Auth.currentAuthenticatedUser();
+        console.log('User is signed in:', user);
+        // No need to redirect if already authenticated
     } catch (error) {
-        console.error('Authentication check error:', error.message);
-        window.Auth.redirectToLogin();
-        return false;
+        console.log('User not authenticated:', error.message);
+        // Uncomment when ready to enforce login
+        Amplify.Auth.federatedSignIn();
     }
 }
 
@@ -60,17 +60,12 @@ function updateAssetId() {
 }
 
 async function searchVehicle() {
-    // First check if the user is authenticated
-    if (!await checkAuthState()) {
-        return;
-    }
-
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const rfidInput = document.getElementById('rfidInput').value.trim();
     const assetId = document.getElementById('assetId').value;
 
-    console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId });
+    console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId }); // Debug log
 
     if (!dateFrom || !dateTo) {
         alert('Please select dates');
@@ -78,17 +73,19 @@ async function searchVehicle() {
     }
 
     try {
-        // Debug auth state and token
-        console.log('Auth state:', window.Auth.isAuthenticated());
-        
-        // Get the ID token for API Gateway
-        const token = window.Auth.getIdToken(); 
-        console.log('ID token found:', !!token, 'length:', token ? token.length : 0);
-        
-        if (!token) {
-            console.error('No ID token available');
-            window.Auth.redirectToLogin();
-            return;
+        // First, handle login
+        console.log('Attempting login...'); // Debug log
+        const loginResponse = await fetch(`${API_BASE_URL}/api/login`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!loginResponse.ok) {
+            throw new Error(`Login failed: ${loginResponse.statusText}`);
         }
 
         const formatDate = (dateString) => {
@@ -100,7 +97,9 @@ async function searchVehicle() {
             const minutes = String(date.getMinutes()).padStart(2, '0');
             
             const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:00`;
+            
             console.log('Formatting date:', dateString, '→', formattedDate);
+            
             return formattedDate;
         };
 
@@ -118,58 +117,41 @@ async function searchVehicle() {
         }
 
         console.log('Sending request with params:', params.toString());
-        
-        // API Gateway endpoints
-        const apiUrl = `${API_BASE_URL}/getData`;
-        console.log('Using API URL:', apiUrl);
 
-        // Try with standard Bearer token format first (most common for API Gateway)
-        console.log('Using standard Bearer token format');
-        const response = await fetch(`${apiUrl}?${params}`, {
+        const response = await fetch(`${API_BASE_URL}/api/getData?${params}`, {
+            credentials: 'include',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        
-        console.log('Response status:', response.status, response.statusText);
-
-        // Handle authentication errors
-        if (response.status === 401 || response.status === 403) {
-            console.log('Authentication failed. Trying to refresh token...');
-            try {
-                await window.Auth.refreshToken();
-                console.log('Token refreshed, retrying request...');
-                return searchVehicle(); // Retry with fresh token
-            } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
-                window.Auth.redirectToLogin();
-                return;
-            }
-        }
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error Response:', errorText);
-            throw new Error(`API request failed: ${response.status} ${response.statusText}. Details: ${errorText}`);
+            throw new Error(`Data fetch failed: ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('Response headers:', response.headers); // Debug log
         console.log('Raw response from server:', data);
+        console.log('Response type:', typeof data); // Debug log
+        console.log('Response structure:', {
+            isArray: Array.isArray(data),
+            hasRoot: data?.root !== undefined,
+            length: Array.isArray(data) ? data.length : (data?.root?.length || 0)
+        });
+
         displayDataOnMap(data);
 
     } catch (error) {
-        console.error('Request error:', error.message);
-        
-        if (error.message.includes('token') || error.message.includes('auth')) {
-            // Handle authentication errors
-            alert('Authentication error. Please log in again.');
-            window.Auth.redirectToLogin();
-        } else {
-            alert(`Error: ${error.message}`);
-        }
+        console.error('Detailed error:', {
+            message: error.message,
+            stack: error.stack
+        });
+        alert(error.message || 'Error fetching data');
     }
 }
+
+
+
 
 // Also update the date picker initialization
 flatpickr("#dateFrom", {
@@ -187,6 +169,8 @@ flatpickr("#dateTo", {
     defaultHour: 23,
     defaultMinute: 59
 });
+
+
 
 function displayDataOnMap(data) {
     // Clear existing markers
@@ -288,6 +272,11 @@ function displayDataOnMap(data) {
     console.log(`Displayed ${validPoints.length} points on the map`);
 }
 
+
+
+
+
+
 function hexToDecimal(hexString) {
     // Remove any leading "0x" if present and convert to uppercase
     hexString = hexString.replace(/^0x/i, '').toUpperCase();
@@ -299,5 +288,7 @@ function decimalToHex(decimalString) {
     // Convert decimal to hex, remove "0x" prefix and pad with zeros if needed
     return BigInt(decimalString).toString(16).toUpperCase().padStart(8, '0');
 }
+
+
 
 document.addEventListener('DOMContentLoaded', checkAuthState);
