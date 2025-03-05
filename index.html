@@ -9,9 +9,29 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Loading overlay - hidden by default but shown during auth -->
+    <div id="loading" style="display: none;">
+        <div class="loading-content">
+            <p>Authenticating...</p>
+        </div>
+    </div>
+
+    <div class="container" id="app">
         <div class="sidebar">
             <h1>Vehicle Tracking</h1>
+            
+            <!-- Authentication status section -->
+            <div class="auth-container">
+                <div id="tokenInfo" class="auth-info"></div>
+                <div class="auth-controls">
+                    <button id="logoutBtn" class="auth-btn">Logout</button>
+                </div>
+                <div class="auth-status">
+                    <span id="status">Ready</span>
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+
             <div class="filter-container">
                 <div class="date-picker">
                     <label for="dateFrom">From:</label>
@@ -44,14 +64,22 @@
                     <input type="hidden" id="assetId" readonly>
                 </div>
 
-                <button onclick="searchVehicle()">Track Vehicle</button>
+                <div class="button-container">
+                    <button id="fetchBtn" onclick="searchVehicle()">Track Vehicle</button>
+                    <button id="clearBtn" onclick="clearResults()">Clear Results</button>
+                </div>
+            </div>
+            
+            <!-- Results container -->
+            <div id="result" class="result-container">
+                <p>API response will appear here...</p>
             </div>
         </div>
         <div id="map"></div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/aws-amplify@5.0.4/dist/aws-amplify.min.js"></script>
-    <script src="aws-config.js" type="module"></script>
+    <script src="auth.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="script.js"></script>

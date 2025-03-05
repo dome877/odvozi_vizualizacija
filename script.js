@@ -1,56 +1,107 @@
 const API_BASE_URL = 'http://localhost:3000';
 
-// Check if user is authenticated
-async function checkAuthState() {
-    try {
-        console.log('Checking authentication state...');
+document.addEventListener('DOMContentLoaded', async function() {
+    // Get DOM elements
+    const fetchBtn = document.getElementById('fetchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const resultDiv = document.getElementById('result');
+    const statusSpan = document.getElementById('status');
+    const timestampSpan = document.getElementById('timestamp');
+    const tokenInfo = document.getElementById('tokenInfo');
+    
+    // Initialize authentication (async)
+    const isAuthenticated = await window.Auth.initAuth();
+    
+    // Setup token refresh mechanism and UI if authenticated
+    if (isAuthenticated) {
+        window.Auth.setupTokenRefresh();
         
-        // Check if Amplify is properly loaded
-        if (typeof Amplify === 'undefined') {
-            console.error('Amplify is not defined - cannot authenticate');
-            return;
-        }
+        // Add event listeners for auth-related actions
+        logoutBtn.addEventListener('click', window.Auth.logout);
+        clearBtn.addEventListener('click', clearResults);
         
-        const user = await Amplify.Auth.currentAuthenticatedUser();
-        console.log('User is signed in:', user);
-        // No need to redirect if already authenticated
-    } catch (error) {
-        console.log('User not authenticated:', error.message);
-        // Uncomment when ready to enforce login
-        Amplify.Auth.federatedSignIn();
+        // Show token info (just the expiry time for security)
+        displayTokenInfo();
+        
+        // Initialize map and app functionality
+        initializeApp();
     }
-}
+    
+    // Function to show basic token information
+    function displayTokenInfo() {
+        try {
+            const idToken = window.Auth.getIdToken();
+            if (idToken) {
+                // Parse the JWT token
+                const tokenParts = idToken.split('.');
+                if (tokenParts.length === 3) {
+                    const payload = JSON.parse(atob(tokenParts[1]));
+                    const expiry = new Date(payload.exp * 1000);
+                    
+                    if (tokenInfo) {
+                        tokenInfo.innerHTML = `
+                            <p>Logged in as: <strong>${payload.email || payload['cognito:username'] || 'User'}</strong></p>
+                            <p>Token expires: <strong>${expiry.toLocaleString()}</strong></p>
+                        `;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing token:', error);
+        }
+    }
+    
+    // Function to clear results
+    function clearResults() {
+        resultDiv.innerHTML = '<p>API response will appear here...</p>';
+        resultDiv.className = '';
+        statusSpan.textContent = 'Ready';
+    }
+    
+    // Function to update timestamp
+    function updateTimestamp() {
+        const now = new Date();
+        timestampSpan.textContent = now.toLocaleString();
+    }
 
-// Initialize the map
-const map = L.map('map').setView([43.7350, 15.8952], 13);
+    // Initialize the app functionality
+    function initializeApp() {
+        // Initialize the map
+        const map = L.map('map').setView([43.7350, 15.8952], 13);
 
-// Add Google Satellite layer
-L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    maxZoom: 20,
-    minZoom: 10,
-    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-    attribution: '© Google'
-}).addTo(map);
+        // Add Google Satellite layer
+        L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            minZoom: 10,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google'
+        }).addTo(map);
 
-// Initialize date pickers with ISO string format
-flatpickr("#dateFrom", {
-    enableTime: true,
-    dateFormat: "Y-m-d H:i:00",
-    time_24hr: true,
-    defaultHour: 0,
-    defaultMinute: 0
+        // Initialize date pickers with ISO string format
+        flatpickr("#dateFrom", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i:00",
+            time_24hr: true,
+            defaultHour: 0,
+            defaultMinute: 0
+        });
+
+        flatpickr("#dateTo", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i:00",
+            time_24hr: true,
+            defaultHour: 23,
+            defaultMinute: 59
+        });
+
+        // Initialize a layer group to store markers
+        window.markersLayer = L.layerGroup().addTo(map);
+        
+        // Add event listener for vehicle search
+        fetchBtn.addEventListener('click', searchVehicle);
+    }
 });
-
-flatpickr("#dateTo", {
-    enableTime: true,
-    dateFormat: "Y-m-d H:i:00",
-    time_24hr: true,
-    defaultHour: 23,
-    defaultMinute: 59
-});
-
-// Initialize a layer group to store markers
-let markersLayer = L.layerGroup().addTo(map);
 
 // Function to update Asset ID based on vehicle selection
 function updateAssetId() {
@@ -60,6 +111,10 @@ function updateAssetId() {
 }
 
 async function searchVehicle() {
+    const fetchBtn = document.getElementById('fetchBtn');
+    const resultDiv = document.getElementById('result');
+    const statusSpan = document.getElementById('status');
+    
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const rfidInput = document.getElementById('rfidInput').value.trim();
@@ -71,6 +126,22 @@ async function searchVehicle() {
         alert('Please select dates');
         return;
     }
+    
+    // Verify authentication before proceeding
+    const idToken = window.Auth.getIdToken();
+    if (!idToken) {
+        resultDiv.innerHTML = '<p>No authentication token available. Please log in again.</p>';
+        resultDiv.className = 'error';
+        statusSpan.textContent = 'Authentication error';
+        setTimeout(() => window.Auth.redirectToLogin(), 2000);
+        return;
+    }
+
+    // Update UI for loading state
+    fetchBtn.disabled = true;
+    resultDiv.innerHTML = '<p class="loading">Loading data...</p>';
+    resultDiv.className = '';
+    statusSpan.textContent = 'Fetching data...';
 
     try {
         // First, handle login
@@ -80,11 +151,18 @@ async function searchVehicle() {
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': `Bearer ${idToken}` // Add auth token
             }
         });
 
         if (!loginResponse.ok) {
+            if (loginResponse.status === 401 || loginResponse.status === 403) {
+                // Token might be invalid or expired
+                resultDiv.innerHTML = '<p>Your session has expired. Redirecting to login...</p>';
+                setTimeout(() => window.Auth.redirectToLogin(), 2000);
+                throw new Error('Authentication required');
+            }
             throw new Error(`Login failed: ${loginResponse.statusText}`);
         }
 
@@ -121,11 +199,18 @@ async function searchVehicle() {
         const response = await fetch(`${API_BASE_URL}/api/getData?${params}`, {
             credentials: 'include',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': `Bearer ${idToken}` // Add auth token
             }
         });
 
         if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                // Token might be invalid or expired
+                resultDiv.innerHTML = '<p>Your session has expired. Redirecting to login...</p>';
+                setTimeout(() => window.Auth.redirectToLogin(), 2000);
+                throw new Error('Authentication required');
+            }
             throw new Error(`Data fetch failed: ${response.statusText}`);
         }
 
@@ -139,6 +224,14 @@ async function searchVehicle() {
             length: Array.isArray(data) ? data.length : (data?.root?.length || 0)
         });
 
+        // Display results in the result div
+        resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        resultDiv.className = 'success';
+        statusSpan.textContent = 'Data fetched successfully';
+        
+        // Update timestamp
+        updateTimestamp();
+
         displayDataOnMap(data);
 
     } catch (error) {
@@ -146,35 +239,34 @@ async function searchVehicle() {
             message: error.message,
             stack: error.stack
         });
+        
+        resultDiv.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+        resultDiv.className = 'error';
+        statusSpan.textContent = 'Error occurred';
+        
+        // Update timestamp
+        updateTimestamp();
+        
         alert(error.message || 'Error fetching data');
+    } finally {
+        // Re-enable button
+        fetchBtn.disabled = false;
     }
 }
 
-
-
-
-// Also update the date picker initialization
-flatpickr("#dateFrom", {
-    enableTime: true,
-    dateFormat: "Y-m-d H:i",  // Changed format
-    time_24hr: true,
-    defaultHour: 0,
-    defaultMinute: 0
-});
-
-flatpickr("#dateTo", {
-    enableTime: true,
-    dateFormat: "Y-m-d H:i",  // Changed format
-    time_24hr: true,
-    defaultHour: 23,
-    defaultMinute: 59
-});
-
-
+function updateTimestamp() {
+    const now = new Date();
+    const timestampSpan = document.getElementById('timestamp');
+    if (timestampSpan) {
+        timestampSpan.textContent = now.toLocaleString();
+    }
+}
 
 function displayDataOnMap(data) {
     // Clear existing markers
-    markersLayer.clearLayers();
+    if (window.markersLayer) {
+        window.markersLayer.clearLayers();
+    }
 
     // First, log the raw data for debugging
     console.log('Raw data received:', data);
@@ -236,7 +328,7 @@ function displayDataOnMap(data) {
                 <strong>RFID:</strong> ${rfidValue}<br>
                 <strong>Location:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
             `)
-            .addTo(markersLayer);
+            .addTo(window.markersLayer);
     });
 
     // Draw route line if RFID filter is active
@@ -248,47 +340,21 @@ function displayDataOnMap(data) {
         ]);
         
         L.polyline(routePoints, {
-            color: '#4CAF50',
-            weight: 2,
-            opacity: 0.5
-        }).addTo(markersLayer);
+            color: 'blue',
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '5, 10'
+        }).addTo(window.markersLayer);
     }
-
-    // Fit map to points
-    if (validPoints.length === 1) {
-        const point = validPoints[0];
-        map.setView([parseFloat(point.latitude), parseFloat(point.longitude)], 18);
-    } else if (validPoints.length > 1) {
-        const bounds = L.latLngBounds(
-            validPoints.map(point => [
-                parseFloat(point.latitude), 
-                parseFloat(point.longitude)
-            ])
-        );
-        map.fitBounds(bounds);
-    }
-
-    // Log summary
-    console.log(`Displayed ${validPoints.length} points on the map`);
 }
 
-
-
-
-
-
 function hexToDecimal(hexString) {
-    // Remove any leading "0x" if present and convert to uppercase
-    hexString = hexString.replace(/^0x/i, '').toUpperCase();
-    // Convert hex to decimal (as a string to handle large numbers)
-    return BigInt('0x' + hexString).toString();
+    if (!hexString || typeof hexString !== 'string') return '';
+    return parseInt(hexString.replace(/^0x/, ''), 16).toString();
 }
 
 function decimalToHex(decimalString) {
-    // Convert decimal to hex, remove "0x" prefix and pad with zeros if needed
-    return BigInt(decimalString).toString(16).toUpperCase().padStart(8, '0');
+    if (!decimalString || isNaN(parseInt(decimalString))) return '';
+    const hex = parseInt(decimalString).toString(16).toUpperCase();
+    return hex.padStart(hex.length + (hex.length % 2), '0');
 }
-
-
-
-document.addEventListener('DOMContentLoaded', checkAuthState);
