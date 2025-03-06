@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         logoutBtn.addEventListener('click', window.Auth.logout);
         clearBtn.addEventListener('click', clearResults);
         
+        // Add event listener for vehicle search (moved from inline HTML)
+        fetchBtn.addEventListener('click', searchVehicle);
+        
         // Show token info (just the expiry time for security)
         displayTokenInfo();
         
@@ -67,21 +70,37 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Initialize the app functionality
     function initializeApp() {
-        // Initialize the map
+        // Initialize the map - add a delay to ensure DOM is ready
+        setTimeout(() => {
+            const map = L.map('map').setView([43.7350, 15.8952], 13);
 
-
-        const map = L.map('map').setView([43.7350, 15.8952], 13);
-
-
-        // Add Google Satellite layer
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            minZoom: 10,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: '© Google'
-        }).addTo(map);
-        
-
+            // Add Google Satellite layer
+            L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                minZoom: 10,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: '© Google'
+            }).addTo(map);
+            
+            // Initialize a layer group to store markers
+            window.markersLayer = L.layerGroup().addTo(map);
+            
+            // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
+            setTimeout(() => {
+                map.invalidateSize();
+                console.log('Map size invalidated');
+            }, 200);
+            
+            // Store map in window object for later access
+            window.map = map;
+            
+            // Add window resize handler to ensure the map renders correctly
+            window.addEventListener('resize', function() {
+                if (window.map) {
+                    window.map.invalidateSize();
+                }
+            });
+        }, 100);
 
         // Initialize date pickers with ISO string format
         flatpickr("#dateFrom", {
@@ -99,29 +118,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             defaultHour: 23,
             defaultMinute: 59
         });
-
-        // Initialize a layer group to store markers
-        window.markersLayer = L.layerGroup().addTo(map);
-        
-
-        // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 100);
-        
-        // Store map in window object for later access
-        window.map = map;
-        
-
-        // Add window resize handler to ensure the map renders correctly
-        window.addEventListener('resize', function() {
-            if (window.map) {
-                window.map.invalidateSize();
-            }
-        });
-        
-        // Add event listener for vehicle search
-        fetchBtn.addEventListener('click', searchVehicle);
     }
 });
 

@@ -1,41 +1,34 @@
+/* Base reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Base HTML elements */
 html, body {
     height: 100%;
     width: 100%;
-    overflow: hidden;
-}
-
-body {
     font-family: Arial, sans-serif;
     color: #333;
 }
 
-/* Main container - simplified positioning */
-.container {
+/* Main app wrapper */
+.app-wrapper {
     display: flex;
-    width: 100%;
     height: 100vh;
-    /* Remove position: absolute as it conflicts with the flex layout */
+    width: 100%;
 }
 
-/* Sidebar styles */
+/* Sidebar styling */
 .sidebar {
     width: 350px;
-    min-width: 350px;
-    max-width: 350px;
     background-color: #2c3e50;
     color: white;
-    height: 100%;
-    overflow-y: auto;
     padding: 20px;
-    z-index: 1; /* Lower z-index value */
-    flex-shrink: 0;
-    position: relative; /* Add position for z-index to work */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar h1 {
@@ -44,20 +37,21 @@ body {
     text-align: center;
 }
 
-/* Map container - simplified */
-#map {
+/* Map container - explicitly separated for reliable rendering */
+#map-container {
     flex: 1;
-    height: 100%;
-    /* Remove explicit width calculation */
-    position: relative; /* Position relative for proper rendering */
+    position: relative;
 }
 
-/* Ensure Leaflet container has proper dimensions */
-.leaflet-container {
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
 }
 
+/* Filter container */
 .filter-container {
     display: flex;
     flex-direction: column;
@@ -65,6 +59,7 @@ body {
     margin-bottom: 20px;
 }
 
+/* Date picker styling */
 .date-picker {
     display: flex;
     flex-direction: column;
@@ -73,7 +68,6 @@ body {
 
 .date-picker label {
     font-size: 14px;
-    margin-bottom: 2px;
 }
 
 .date-picker input {
@@ -81,14 +75,13 @@ body {
     border: none;
     border-radius: 5px;
     font-size: 14px;
-    width: 100%;
 }
 
+/* Vehicle select styling */
 .vehicle-select {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 10px;
 }
 
 .vehicle-select label {
@@ -101,9 +94,9 @@ select {
     border-radius: 5px;
     font-size: 14px;
     width: 100%;
-    background-color: white;
 }
 
+/* Input group styling */
 .input-group {
     display: flex;
     flex-direction: column;
@@ -128,6 +121,7 @@ input[readonly] {
     color: #7f8c8d;
 }
 
+/* Button styling */
 button {
     padding: 12px;
     background-color: #3498db;
@@ -146,19 +140,18 @@ button:hover {
 .button-container {
     display: flex;
     gap: 10px;
-    margin-top: 10px;
 }
 
 .button-container button {
     flex: 1;
 }
 
+/* Auth container */
 .auth-container {
     margin-bottom: 20px;
     padding: 15px;
     background-color: rgba(248, 249, 250, 0.9);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     color: #333;
 }
 
@@ -194,6 +187,7 @@ button:hover {
     border-top: 1px solid #dee2e6;
 }
 
+/* Results container */
 .result-container {
     margin-top: 20px;
     padding: 15px;
@@ -209,6 +203,7 @@ button:hover {
     word-break: break-word;
 }
 
+/* Status classes */
 .success {
     background-color: #d4edda;
     color: #155724;
@@ -231,7 +226,8 @@ button:hover {
     padding: 15px;
 }
 
-#loading {
+/* Loading overlay */
+.loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -239,7 +235,7 @@ button:hover {
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.7);
     z-index: 9999;
-    display: flex;
+    display: none; /* Hidden by default */
     justify-content: center;
     align-items: center;
 }
@@ -252,11 +248,13 @@ button:hover {
     text-align: center;
 }
 
+/* Custom marker */
 .custom-marker {
     background: transparent;
     border: none;
 }
 
+/* Flatpickr customization */
 .flatpickr-calendar {
     background: #34495e;
 }
@@ -266,20 +264,19 @@ button:hover {
     border-color: #3498db;
 }
 
+/* Media queries for responsive design */
 @media (max-width: 768px) {
-    .container {
+    .app-wrapper {
         flex-direction: column;
     }
     
     .sidebar {
         width: 100%;
-        max-width: 100%;
-        height: 40%;
-        min-height: 300px;
+        height: 50%;
+        min-height: 400px;
     }
     
-    #map {
-        width: 100%;
-        height: 60%;
+    #map-container {
+        height: 50%;
     }
 }
