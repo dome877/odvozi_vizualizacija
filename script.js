@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://r1gsalkeyj.execute-api.eu-north-1.amazonaws.com/dev/ecomobile';
 
 document.addEventListener('DOMContentLoaded', async function() {
     // Get DOM elements
@@ -162,28 +162,6 @@ async function searchVehicle() {
     statusSpan.textContent = 'Fetching data...';
 
     try {
-        // First, handle login
-        console.log('Attempting login...'); // Debug log
-        const loginResponse = await fetch(`${API_BASE_URL}/api/login`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': `Bearer ${idToken}` // Add auth token
-            }
-        });
-
-        if (!loginResponse.ok) {
-            if (loginResponse.status === 401 || loginResponse.status === 403) {
-                // Token might be invalid or expired
-                resultDiv.innerHTML = '<p>Your session has expired. Redirecting to login...</p>';
-                setTimeout(() => window.Auth.redirectToLogin(), 2000);
-                throw new Error('Authentication required');
-            }
-            throw new Error(`Login failed: ${loginResponse.statusText}`);
-        }
-
         const formatDate = (dateString) => {
             const date = new Date(dateString);
             const year = date.getFullYear();
@@ -214,11 +192,12 @@ async function searchVehicle() {
 
         console.log('Sending request with params:', params.toString());
 
-        const response = await fetch(`${API_BASE_URL}/api/getData?${params}`, {
-            credentials: 'include',
+        // Direct API Gateway request
+        const response = await fetch(`${API_BASE_URL}?${params}`, {
+            method: 'GET',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': `Bearer ${idToken}` // Add auth token
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
             }
         });
 
