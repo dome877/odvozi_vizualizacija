@@ -10,6 +10,7 @@
     height: 100vh;
     width: 100%;
     overflow: hidden;
+    position: relative; /* Add this */
 }
 
 .sidebar {
@@ -89,7 +90,9 @@ button:hover {
 #map {
     flex-grow: 1;
     height: 100%;
-    width: calc(100% - 350px);
+    /* Remove the width calculation, let flexbox handle it */
+    background-color: #eee; /* Temporary background to see the container */
+    position: relative; /* Ensure proper positioning context */
 }
 
 /* Flatpickr customization */
