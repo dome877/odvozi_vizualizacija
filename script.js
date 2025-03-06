@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const map = L.map('map').setView([43.7350, 15.8952], 13);
 
         // Add Google Satellite layer
-        L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             minZoom: 10,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
