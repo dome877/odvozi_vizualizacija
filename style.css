@@ -15,17 +15,15 @@ body {
     color: #333;
 }
 
+/* Main container - simplified positioning */
 .container {
     display: flex;
     width: 100%;
     height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    /* Remove position: absolute as it conflicts with the flex layout */
 }
 
+/* Sidebar styles */
 .sidebar {
     width: 350px;
     min-width: 350px;
@@ -35,8 +33,9 @@ body {
     height: 100%;
     overflow-y: auto;
     padding: 20px;
-    z-index: 1000;
+    z-index: 1; /* Lower z-index value */
     flex-shrink: 0;
+    position: relative; /* Add position for z-index to work */
 }
 
 .sidebar h1 {
@@ -45,14 +44,15 @@ body {
     text-align: center;
 }
 
+/* Map container - simplified */
 #map {
     flex: 1;
     height: 100%;
-    width: calc(100% - 350px);
-    position: relative;
-    z-index: 500;
+    /* Remove explicit width calculation */
+    position: relative; /* Position relative for proper rendering */
 }
 
+/* Ensure Leaflet container has proper dimensions */
 .leaflet-container {
     width: 100%;
     height: 100%;
