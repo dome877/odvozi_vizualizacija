@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
         setTimeout(() => {
             map.invalidateSize();
-        }, 500);
+        }, 100);
         
         // Store map in window object for later access
         window.map = map;
