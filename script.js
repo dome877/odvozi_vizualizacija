@@ -118,6 +118,27 @@ document.addEventListener('DOMContentLoaded', async function() {
             defaultHour: 23,
             defaultMinute: 59
         });
+
+        // Set up hex-to-decimal converter
+        const convertBtn = document.getElementById('convertBtn');
+        const hexInput = document.getElementById('hexInput');
+        const decimalOutput = document.getElementById('decimalOutput');
+        
+        if (convertBtn && hexInput && decimalOutput) {
+            convertBtn.addEventListener('click', function() {
+                decimalOutput.value = hexToDecimal(hexInput.value);
+            });
+            
+            // Also convert on Enter key press
+            hexInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    decimalOutput.value = hexToDecimal(hexInput.value);
+                }
+            });
+        }
+        
+        // Update timestamp
+        updateTimestamp();
     }
 });
 
@@ -221,8 +242,8 @@ async function searchVehicle() {
             length: Array.isArray(data) ? data.length : (data?.root?.length || 0)
         });
 
-        // Display results in the result div
-        resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        // Update status without showing raw data
+        resultDiv.innerHTML = '<p>Data fetched successfully</p>';
         resultDiv.className = 'success';
         statusSpan.textContent = 'Data fetched successfully';
         
