@@ -4,23 +4,39 @@
     box-sizing: border-box;
 }
 
-.container {
-    display: flex;
-    flex-direction: row;
-    height: 100vh;
+html, body {
+    height: 100%;
     width: 100%;
     overflow: hidden;
-    position: relative; /* Add this */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .sidebar {
     width: 350px;
     min-width: 350px;
+    max-width: 350px;
     background-color: #2c3e50;
-    padding: 20px;
     color: white;
-    overflow-y: auto;
     height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+    z-index: 1000;
+    flex-shrink: 0;
 }
 
 .sidebar h1 {
@@ -29,21 +45,35 @@
     text-align: center;
 }
 
+#map {
+    flex: 1;
+    height: 100%;
+    width: calc(100% - 350px);
+    position: relative;
+    z-index: 500;
+}
+
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+}
+
 .filter-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .date-picker {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .date-picker label {
     font-size: 14px;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .date-picker input {
@@ -51,12 +81,14 @@
     border: none;
     border-radius: 5px;
     font-size: 14px;
+    width: 100%;
 }
 
 .vehicle-select {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .vehicle-select label {
@@ -69,43 +101,8 @@ select {
     border-radius: 5px;
     font-size: 14px;
     width: 100%;
+    background-color: white;
 }
-
-button {
-    padding: 12px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-    margin-top: 10px;
-}
-
-button:hover {
-    background-color: #2980b9;
-}
-
-#map {
-    flex-grow: 1;
-    height: 100%;
-    /* Remove the width calculation, let flexbox handle it */
-    background-color: #eee; /* Temporary background to see the container */
-    position: relative; /* Ensure proper positioning context */
-}
-
-/* Flatpickr customization */
-.flatpickr-calendar {
-    background: #34495e;
-}
-
-.flatpickr-day.selected {
-    background: #3498db;
-    border-color: #3498db;
-}
-
-/* Previous CSS remains the same, just add: */
 
 .input-group {
     display: flex;
@@ -131,39 +128,38 @@ input[readonly] {
     color: #7f8c8d;
 }
 
-.custom-marker {
-    background: transparent;
+button {
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
     border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
 }
 
-/* Auth-related styling */
-#loading {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
+button:hover {
+    background-color: #2980b9;
+}
+
+.button-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-.loading-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
+.button-container button {
+    flex: 1;
 }
 
 .auth-container {
     margin-bottom: 20px;
     padding: 15px;
-    background-color: #f8f9fa;
+    background-color: rgba(248, 249, 250, 0.9);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #333;
 }
 
 .auth-info {
@@ -202,9 +198,10 @@ input[readonly] {
     margin-top: 20px;
     padding: 15px;
     border-radius: 8px;
-    background-color: #f8f9fa;
+    background-color: rgba(248, 249, 250, 0.9);
     overflow-y: auto;
     max-height: 300px;
+    color: #333;
 }
 
 .result-container pre {
@@ -212,30 +209,77 @@ input[readonly] {
     word-break: break-word;
 }
 
-.button-container {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.button-container button {
-    flex: 1;
-}
-
 .success {
     background-color: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .error {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .loading {
     color: #0c5460;
     text-align: center;
     padding: 15px;
+}
+
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.custom-marker {
+    background: transparent;
+    border: none;
+}
+
+.flatpickr-calendar {
+    background: #34495e;
+}
+
+.flatpickr-day.selected {
+    background: #3498db;
+    border-color: #3498db;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+        height: 40%;
+        min-height: 300px;
+    }
+    
+    #map {
+        width: 100%;
+        height: 60%;
+    }
 }

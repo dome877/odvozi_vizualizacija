@@ -103,9 +103,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize a layer group to store markers
         window.markersLayer = L.layerGroup().addTo(map);
         
-        console.log('Map container dimensions:', 
-            document.getElementById('map').offsetWidth,
-            document.getElementById('map').offsetHeight);
+
         // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
         setTimeout(() => {
             map.invalidateSize();
@@ -114,9 +112,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Store map in window object for later access
         window.map = map;
         
-        console.log('Map container dimensions:', 
-            document.getElementById('map').offsetWidth,
-            document.getElementById('map').offsetHeight);
+
         // Add window resize handler to ensure the map renders correctly
         window.addEventListener('resize', function() {
             if (window.map) {
