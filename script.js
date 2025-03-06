@@ -98,6 +98,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize a layer group to store markers
         window.markersLayer = L.layerGroup().addTo(map);
         
+        // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+        
+        // Store map in window object for later access
+        window.map = map;
+        
+        // Add window resize handler to ensure the map renders correctly
+        window.addEventListener('resize', function() {
+            if (window.map) {
+                window.map.invalidateSize();
+            }
+        });
+        
         // Add event listener for vehicle search
         fetchBtn.addEventListener('click', searchVehicle);
     }
