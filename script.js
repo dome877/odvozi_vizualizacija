@@ -68,7 +68,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize the app functionality
     function initializeApp() {
         // Initialize the map
+        console.log('Initializing map...');
+
         const map = L.map('map').setView([43.7350, 15.8952], 13);
+        console.log('Map object created');
 
         // Add Google Satellite layer
         L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
@@ -77,6 +80,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google'
         }).addTo(map);
+        
+        console.log('Tile layer added');
 
         // Initialize date pickers with ISO string format
         flatpickr("#dateFrom", {
@@ -98,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize a layer group to store markers
         window.markersLayer = L.layerGroup().addTo(map);
         
+        console.log('Setting map invalidation timeout');
         // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
         setTimeout(() => {
             map.invalidateSize();
