@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     function displayTokenInfo() {
         try {
             const idToken = window.Auth.getIdToken();
+            console.log('ID Token:', idToken);
             if (idToken) {
                 // Parse the JWT token
                 const tokenParts = idToken.split('.');
