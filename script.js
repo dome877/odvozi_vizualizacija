@@ -70,8 +70,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize the map
         const map = L.map('map').setView([43.7350, 15.8952], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        // Add Google Satellite layer
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            minZoom: 10,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google'
         }).addTo(map);
 
         // Initialize date pickers with ISO string format
