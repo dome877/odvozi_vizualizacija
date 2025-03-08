@@ -280,3 +280,48 @@ button:hover {
         height: 50%;
     }
 }
+
+/* Box filter styling */
+.box-filter {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.box-filter label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.box-filter input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+#boxInfo {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    margin-top: 8px;
+}
+
+.box-instructions {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Make sure drawn items are clearly visible */
+.leaflet-draw-tooltip {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-weight: bold;
+}
+
+.leaflet-interactive {
+    cursor: pointer;
+}

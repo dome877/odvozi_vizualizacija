@@ -60,6 +60,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         resultDiv.innerHTML = '<p>API response will appear here...</p>';
         resultDiv.className = '';
         statusSpan.textContent = 'Ready';
+        
+        // Clear map markers
+        if (window.markersLayer) {
+            window.markersLayer.clearLayers();
+        }
+        
+        // Clear drawn box
+        if (window.drawnItems) {
+            window.drawnItems.clearLayers();
+            window.drawnBounds = null;
+        }
+        
+        // Clear box info display
+        const boxInfo = document.getElementById('boxInfo');
+        if (boxInfo) {
+            boxInfo.style.display = 'none';
+            boxInfo.innerHTML = '';
+        }
     }
     
     // Function to update timestamp
@@ -84,6 +102,59 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // Initialize a layer group to store markers
             window.markersLayer = L.layerGroup().addTo(map);
+            
+            // Initialize a layer for drawn items
+            window.drawnItems = new L.FeatureGroup();
+            map.addLayer(window.drawnItems);
+            
+            // Initialize the draw control and add it to the map
+            const drawControl = new L.Control.Draw({
+                draw: {
+                    polyline: false,
+                    polygon: false,
+                    circle: false,
+                    circlemarker: false,
+                    marker: false,
+                    rectangle: {
+                        shapeOptions: {
+                            color: '#3388ff',
+                            weight: 2
+                        }
+                    }
+                },
+                edit: {
+                    featureGroup: window.drawnItems,
+                    remove: true
+                }
+            });
+            map.addControl(drawControl);
+            
+            // Event handler for newly drawn items
+            map.on(L.Draw.Event.CREATED, function (e) {
+                // Clear previous drawings
+                window.drawnItems.clearLayers();
+                
+                // Add the newly drawn layer
+                const layer = e.layer;
+                window.drawnItems.addLayer(layer);
+                
+                // Store the bounds for later use in search
+                if (e.layerType === 'rectangle') {
+                    const bounds = layer.getBounds();
+                    window.drawnBounds = bounds;
+                    
+                    // Show info about the drawn box
+                    const boxInfo = document.getElementById('boxInfo');
+                    if (boxInfo) {
+                        boxInfo.innerHTML = `
+                            Box coordinates:<br>
+                            NE: ${bounds.getNorthEast().lat.toFixed(6)}, ${bounds.getNorthEast().lng.toFixed(6)}<br>
+                            SW: ${bounds.getSouthWest().lat.toFixed(6)}, ${bounds.getSouthWest().lng.toFixed(6)}
+                        `;
+                        boxInfo.style.display = 'block';
+                    }
+                }
+            });
             
             // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
             setTimeout(() => {
@@ -158,11 +229,18 @@ async function searchVehicle() {
     const dateTo = document.getElementById('dateTo').value;
     const rfidInput = document.getElementById('rfidInput').value.trim();
     const assetId = document.getElementById('assetId').value;
+    const useBoxFilter = document.getElementById('useBoxFilter')?.checked || false;
 
-    console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId }); // Debug log
+    console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId, useBoxFilter }); // Debug log
 
     if (!dateFrom || !dateTo) {
         alert('Please select dates');
+        return;
+    }
+    
+    // Check if box filter is enabled but no box is drawn
+    if (useBoxFilter && !window.drawnBounds) {
+        alert('Please draw a box on the map first');
         return;
     }
     
@@ -209,6 +287,24 @@ async function searchVehicle() {
 
         if (rfidInput) {
             params.append('RFID', rfidInput);
+        }
+        
+        // Add box filter parameters if enabled
+        if (useBoxFilter && window.drawnBounds) {
+            const bounds = window.drawnBounds;
+            params.append('filterByBox', 'true');
+            params.append('minLat', bounds.getSouth().toFixed(8));
+            params.append('maxLat', bounds.getNorth().toFixed(8));
+            params.append('minLng', bounds.getWest().toFixed(8));
+            params.append('maxLng', bounds.getEast().toFixed(8));
+            console.log('Adding box filter:', {
+                minLat: bounds.getSouth(),
+                maxLat: bounds.getNorth(),
+                minLng: bounds.getWest(),
+                maxLng: bounds.getEast()
+            });
+        } else {
+            params.append('filterByBox', 'false');
         }
 
         console.log('Sending request with params:', params.toString());

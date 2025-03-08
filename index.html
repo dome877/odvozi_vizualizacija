@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Tracking GIS</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -72,6 +73,16 @@
                     <input type="hidden" id="assetId" readonly>
                 </div>
 
+                <!-- Box filter option -->
+                <div class="input-group box-filter">
+                    <label for="useBoxFilter">
+                        <input type="checkbox" id="useBoxFilter" />
+                        Filter by map box
+                    </label>
+                    <div id="boxInfo" style="display:none; margin-top: 5px; font-size: 0.8em; color: #666;"></div>
+                    <div class="box-instructions">Draw a rectangle on the map to filter by area</div>
+                </div>
+
                 <!-- Action buttons -->
                 <div class="button-container">
                     <button id="fetchBtn">Track Vehicle</button>
@@ -110,6 +121,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/aws-amplify@5.0.4/dist/aws-amplify.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="auth.js"></script>
     <script src="script.js"></script>
