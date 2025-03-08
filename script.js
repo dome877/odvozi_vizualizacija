@@ -148,8 +148,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                     if (boxInfo) {
                         boxInfo.innerHTML = `
                             Box coordinates:<br>
-                            NE: ${bounds.getNorthEast().lat.toFixed(6)}, ${bounds.getNorthEast().lng.toFixed(6)}<br>
-                            SW: ${bounds.getSouthWest().lat.toFixed(6)}, ${bounds.getSouthWest().lng.toFixed(6)}
+                            NE: ${bounds.getNorthEast().lat.toFixed(7)}, ${bounds.getNorthEast().lng.toFixed(7)}<br>
+                            SW: ${bounds.getSouthWest().lat.toFixed(7)}, ${bounds.getSouthWest().lng.toFixed(7)}
                         `;
                         boxInfo.style.display = 'block';
                     }
@@ -293,15 +293,15 @@ async function searchVehicle() {
         if (useBoxFilter && window.drawnBounds) {
             const bounds = window.drawnBounds;
             params.append('filterByBox', 'true');
-            params.append('minLat', bounds.getSouth().toFixed(8));
-            params.append('maxLat', bounds.getNorth().toFixed(8));
-            params.append('minLng', bounds.getWest().toFixed(8));
-            params.append('maxLng', bounds.getEast().toFixed(8));
+            params.append('minLat', bounds.getSouth().toFixed(7));
+            params.append('maxLat', bounds.getNorth().toFixed(7));
+            params.append('minLng', bounds.getWest().toFixed(7));
+            params.append('maxLng', bounds.getEast().toFixed(7));
             console.log('Adding box filter:', {
-                minLat: bounds.getSouth(),
-                maxLat: bounds.getNorth(),
-                minLng: bounds.getWest(),
-                maxLng: bounds.getEast()
+                minLat: bounds.getSouth().toFixed(7),
+                maxLat: bounds.getNorth().toFixed(7),
+                minLng: bounds.getWest().toFixed(7),
+                maxLng: bounds.getEast().toFixed(7)
             });
         } else {
             params.append('filterByBox', 'false');
