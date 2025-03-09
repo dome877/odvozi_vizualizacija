@@ -422,11 +422,24 @@ function displayDataOnMap(data) {
         const rfidValue = point.rfid_value || 'No RFID';
         const vehicleName = point.deviceName || 'Unknown Vehicle';
         const hasValidRfid = point.rfid_value && point.rfid_value !== '-';
+        // Check if the point has the additional object information
+        const hasObjectInfo = point.VrstaObjekta || point.SifraObjekta || point.NazivObjekta;
+
+        // Determine which icon to use:
+        // - Red: No valid RFID
+        // - Yellow: Has RFID but no object info
+        // - Green: Has both RFID and object info
+        let iconUrl;
+        if (!hasValidRfid) {
+            iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png';
+        } else if (!hasObjectInfo) {
+            iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png';
+        } else {
+            iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
+        }
 
         const icon = L.icon({
-            iconUrl: hasValidRfid ? 
-                'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png' : 
-                'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            iconUrl: iconUrl,
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
             iconSize: [15, 24],
             iconAnchor: [7, 24],
