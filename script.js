@@ -441,6 +441,13 @@ function displayDataOnMap(data) {
                 <strong>Vehicle:</strong> ${vehicleName}<br>
                 <strong>RFID:</strong> ${rfidValue}<br>
                 <strong>Location:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                ${point.VrstaObjekta ? `<br><strong>Object Type:</strong> ${point.VrstaObjekta}` : ''}
+                ${point.SifraObjekta ? `<br><strong>Object Code:</strong> ${point.SifraObjekta}` : ''}
+                ${point.NazivObjekta ? `<br><strong>Object Name:</strong> ${point.NazivObjekta}` : ''}
+                ${point.Ulica ? `<br><strong>Street:</strong> ${point.Ulica}` : ''}
+                ${point.KucniBroj ? `<br><strong>House Number:</strong> ${point.KucniBroj}` : ''}
+                ${point.DatumAktivacije ? `<br><strong>Activation Date:</strong> ${point.DatumAktivacije}` : ''}
+                ${point.ZajednickaPostuda ? `<br><strong>Shared Container:</strong> ${point.ZajednickaPostuda}` : ''}
             `)
             .addTo(window.markersLayer);
     });
