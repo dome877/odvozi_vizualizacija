@@ -423,7 +423,7 @@ function displayDataOnMap(data) {
         const vehicleName = point.deviceName || 'Unknown Vehicle';
         const hasValidRfid = point.rfid_value && point.rfid_value !== '-';
         // Check if the point has the additional object information
-        const hasObjectInfo = point.VrstaObjekta || point.SifraObjekta || point.NazivObjekta;
+        const hasObjectInfo = point.VrstaObjekta || point.SifraObjekta || point.NazivObjekta || point.ZajednickaPostuda;
 
         // Determine which icon to use:
         // - Red: No valid RFID
