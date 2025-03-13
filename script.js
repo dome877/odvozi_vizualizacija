@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://r1gsalkeyj.execute-api.eu-north-1.amazonaws.com/dev/ecomobile';
+const API_BASE_URL = 'https://gfa97tr7ff.execute-api.eu-north-1.amazonaws.com/ecomobile-lambda';
 
 document.addEventListener('DOMContentLoaded', async function() {
     // Get DOM elements
