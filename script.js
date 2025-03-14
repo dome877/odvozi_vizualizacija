@@ -238,10 +238,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             defaultMinute: 0,
             // Only use Croatian locale if available
             ...(flatpickr.l10ns.hr ? { locale: "hr" } : {}),
-            confirmDate: {
-                showAlways: true,
-                text: "U redu"
-            },
             plugins: [
                 new confirmDatePlugin({
                     confirmText: "U redu",
@@ -259,10 +255,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             defaultMinute: 59,
             // Only use Croatian locale if available
             ...(flatpickr.l10ns.hr ? { locale: "hr" } : {}),
-            confirmDate: {
-                showAlways: true,
-                text: "U redu"
-            },
             plugins: [
                 new confirmDatePlugin({
                     confirmText: "U redu",
