@@ -218,10 +218,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         }, 100);
 
         // Make sure the Croatian locale is available or use default
+        let locale = "default";
         try {
             // Check if Croatian locale is available
-            if (flatpickr.l10ns.hr) {
+            if (flatpickr.l10ns && flatpickr.l10ns.hr) {
                 console.log("Croatian locale loaded successfully");
+                locale = "hr";
+                // Ensure the confirmDate text is properly set in Croatian
+                if (typeof confirmDatePlugin !== 'undefined') {
+                    flatpickr.l10ns.hr.confirmDatePlugin = {
+                        confirmText: "U redu",
+                        showAlways: true
+                    };
+                }
             } else {
                 console.warn("Croatian locale not available, using default");
             }
@@ -236,13 +245,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             time_24hr: true,
             defaultHour: 0,
             defaultMinute: 0,
-            // Only use Croatian locale if available
-            ...(flatpickr.l10ns.hr ? { locale: "hr" } : {}),
+            locale: locale !== "default" ? locale : undefined,
             plugins: [
                 new confirmDatePlugin({
                     confirmText: "U redu",
                     confirmIcon: "",
-                    showAlways: true
+                    showAlways: true,
+                    theme: "light"
                 })
             ]
         });
@@ -253,13 +262,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             time_24hr: true,
             defaultHour: 23,
             defaultMinute: 59,
-            // Only use Croatian locale if available
-            ...(flatpickr.l10ns.hr ? { locale: "hr" } : {}),
+            locale: locale !== "default" ? locale : undefined,
             plugins: [
                 new confirmDatePlugin({
                     confirmText: "U redu",
                     confirmIcon: "",
-                    showAlways: true
+                    showAlways: true,
+                    theme: "light"
                 })
             ]
         });
