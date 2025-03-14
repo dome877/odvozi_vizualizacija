@@ -1,5 +1,33 @@
 const API_BASE_URL = 'https://gfa97tr7ff.execute-api.eu-north-1.amazonaws.com/prod/ecomobile-lambda';
 
+// Function to toggle the converter section
+function toggleConverter() {
+    const content = document.getElementById('converterContent');
+    const icon = document.querySelector('.toggle-icon');
+    
+    if (content && icon) {
+        content.classList.toggle('collapsed');
+        icon.classList.toggle('collapsed');
+    }
+}
+
+// Function to show/hide central notification
+function showCentralNotification(show, message = '', isLoading = true) {
+    const notification = document.getElementById('centralNotification');
+    const messageEl = notification.querySelector('.message');
+    const loader = notification.querySelector('.loader');
+    
+    if (notification) {
+        if (show) {
+            if (messageEl) messageEl.textContent = message;
+            if (loader) loader.style.display = isLoading ? 'block' : 'none';
+            notification.classList.add('visible');
+        } else {
+            notification.classList.remove('visible');
+        }
+    }
+}
+
 // Function to update timestamp - moved to global scope
 function updateTimestamp() {
     const now = new Date();
@@ -251,6 +279,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
+        // Initialize collapsible sections
+        // Default state: converter collapsed (uncomment to start collapsed)
+        // toggleConverter();
+        
         // Update timestamp
         updateTimestamp();
     }
@@ -299,9 +331,12 @@ async function searchVehicle() {
 
     // Update UI for loading state
     fetchBtn.disabled = true;
-    resultDiv.innerHTML = '<p class="loading">Učitavanje podataka...</p>';
+    resultDiv.innerHTML = '';
     resultDiv.className = '';
     statusSpan.textContent = 'Dohvaćanje podataka...';
+    
+    // Show central loading notification
+    showCentralNotification(true, 'Učitavanje podataka...', true);
 
     try {
         const formatDate = (dateString) => {
@@ -372,18 +407,26 @@ async function searchVehicle() {
         }
 
         const data = await response.json();
-        console.log('Response headers:', response.headers); // Debug log
+        
+        // Log data but don't display in result div
+        console.log('Response headers:', response.headers);
         console.log('Raw response from server:', data);
-        console.log('Response type:', typeof data); // Debug log
+        console.log('Response type:', typeof data);
         console.log('Response structure:', {
             isArray: Array.isArray(data),
             hasRoot: data?.root !== undefined,
             length: Array.isArray(data) ? data.length : (data?.root?.length || 0)
         });
 
+        // Show success notification briefly
+        showCentralNotification(true, 'Podaci uspješno dohvaćeni', false);
+        
+        // Hide notification after displaying data
+        setTimeout(() => {
+            showCentralNotification(false);
+        }, 1500);
+        
         // Update status without showing raw data
-        resultDiv.innerHTML = '<p>Podaci uspješno dohvaćeni</p>';
-        resultDiv.className = 'success';
         statusSpan.textContent = 'Podaci uspješno dohvaćeni';
         
         // Update timestamp
@@ -393,7 +436,13 @@ async function searchVehicle() {
 
     } catch (error) {
         console.error('Error fetching data:', error);
-        resultDiv.innerHTML = `<p>Greška: ${error.message}</p>`;
+        
+        // Show error in central notification
+        showCentralNotification(true, `Greška: ${error.message}`, false);
+        setTimeout(() => {
+            showCentralNotification(false);
+        }, 3000);
+        
         resultDiv.className = 'error';
         statusSpan.textContent = 'Greška';
     } finally {

@@ -95,17 +95,22 @@
             
             <!-- Hex to Decimal Converter -->
             <div class="converter-container">
-                <h2 class="section-title">HEX u Decimalni pretvarač</h2>
-                <div class="input-group">
-                    <label for="hexInput">HEX vrijednost:</label>
-                    <input type="text" id="hexInput" placeholder="Unesite HEX vrijednost...">
+                <div class="collapsible-header" onclick="toggleConverter()">
+                    <h2 class="section-title">HEX u Decimalni pretvarač</h2>
+                    <span class="toggle-icon">▼</span>
                 </div>
-                <div class="input-group">
-                    <label for="decimalOutput">Decimalna vrijednost:</label>
-                    <input type="text" id="decimalOutput" readonly>
-                </div>
-                <div class="button-container">
-                    <button id="convertBtn">Pretvori</button>
+                <div id="converterContent" class="collapsible-content">
+                    <div class="input-group">
+                        <label for="hexInput">HEX vrijednost:</label>
+                        <input type="text" id="hexInput" placeholder="Unesite HEX vrijednost...">
+                    </div>
+                    <div class="input-group">
+                        <label for="decimalOutput">Decimalna vrijednost:</label>
+                        <input type="text" id="decimalOutput" readonly>
+                    </div>
+                    <div class="button-container">
+                        <button id="convertBtn">Pretvori</button>
+                    </div>
                 </div>
             </div>
             
@@ -116,6 +121,12 @@
         <!-- Map container -->
         <div id="map-container">
             <div id="map"></div>
+            
+            <!-- Central notification overlay -->
+            <div id="centralNotification" class="central-notification">
+                <div class="loader"></div>
+                <div class="message">Učitavanje podataka...</div>
+            </div>
         </div>
     </div>
 

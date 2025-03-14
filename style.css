@@ -49,8 +49,8 @@ html, body {
 .section-title {
     font-size: 16px;
     font-weight: 600;
-    margin-bottom: 15px;
-    padding-bottom: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     color: #ecf0f1;
 }
@@ -73,14 +73,14 @@ html, body {
 .filter-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 20px;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 15px;
 }
 
 /* Converter container */
 .converter-container {
-    padding: 20px;
+    padding: 15px;
     background-color: rgba(0, 0, 0, 0.1);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -90,8 +90,8 @@ html, body {
 .date-picker {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
+    gap: 5px;
+    margin-bottom: 10px;
 }
 
 .date-picker label {
@@ -118,8 +118,8 @@ html, body {
 .vehicle-select {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
+    gap: 5px;
+    margin-bottom: 10px;
 }
 
 .vehicle-select label {
@@ -147,8 +147,8 @@ select:focus {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-bottom: 15px;
+    gap: 4px;
+    margin-bottom: 10px;
 }
 
 .input-group label {
@@ -215,14 +215,14 @@ button:active {
 /* Auth container */
 .auth-container {
     margin-bottom: 5px;
-    padding: 15px 20px;
+    padding: 12px 15px;
     background-color: rgba(0, 0, 0, 0.15);
     color: #ecf0f1;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .auth-info {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     font-size: 0.9rem;
 }
 
@@ -383,9 +383,9 @@ button:active {
 
 /* Box filter styling */
 .box-filter {
-    margin-top: 10px;
-    margin-bottom: 15px;
-    padding: 15px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
     background-color: rgba(0, 0, 0, 0.1);
     border-radius: 5px;
 }
@@ -416,7 +416,7 @@ button:active {
 .box-instructions {
     font-size: 0.8em;
     color: #bdc3c7;
-    margin-top: 8px;
+    margin-top: 5px;
     font-style: italic;
 }
 
@@ -429,4 +429,86 @@ button:active {
 
 .leaflet-interactive {
     cursor: pointer;
+}
+
+/* Collapsible elements */
+.collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.collapsible-header .section-title {
+    margin-bottom: 0;
+    flex-grow: 1;
+}
+
+.toggle-icon {
+    font-size: 14px;
+    transition: transform 0.3s;
+}
+
+.toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    max-height: 500px; /* Initial state: expanded */
+    padding-top: 10px;
+}
+
+.collapsible-content.collapsed {
+    max-height: 0;
+    padding-top: 0;
+}
+
+/* Central notification overlay */
+.central-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 250px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.central-notification.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.central-notification .loader {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #3498db;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 15px;
+    animation: spin 1s linear infinite;
+}
+
+.central-notification .message {
+    font-size: 16px;
+    text-align: center;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
