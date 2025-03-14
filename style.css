@@ -23,7 +23,7 @@ html, body {
 /* Sidebar styling - updated with modern design */
 .sidebar {
     width: 350px;
-    background: linear-gradient(135deg, #34495e 0%, #144f06 100%);
+    background: linear-gradient(135deg, #0e3617 0%, #0b3002 100%);
     color: white;
     overflow-y: auto;
     display: flex;
@@ -148,7 +148,7 @@ select:focus {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 0;
 }
 
 .input-group label {
