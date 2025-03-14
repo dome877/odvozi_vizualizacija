@@ -1,5 +1,22 @@
 const API_BASE_URL = 'https://gfa97tr7ff.execute-api.eu-north-1.amazonaws.com/prod/ecomobile-lambda';
 
+// Function to update timestamp - moved to global scope
+function updateTimestamp() {
+    const now = new Date();
+    const options = { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+    };
+    const timestampSpan = document.getElementById('timestamp');
+    if (timestampSpan) {
+        timestampSpan.textContent = now.toLocaleDateString('hr-HR', options);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Get DOM elements
     const fetchBtn = document.getElementById('fetchBtn');
@@ -88,20 +105,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    // Function to update timestamp
-    function updateTimestamp() {
-        const now = new Date();
-        const options = { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit'
-        };
-        timestampSpan.textContent = now.toLocaleDateString('hr-HR', options);
-    }
-
     // Initialize the app functionality
     function initializeApp() {
         // Initialize the map - add a delay to ensure DOM is ready
