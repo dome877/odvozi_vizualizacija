@@ -10,7 +10,8 @@ html, body {
     height: 100%;
     width: 100%;
     font-family: 'Segoe UI', Arial, sans-serif;
-    color: #333;
+    color: #2c3e50;
+    background-color: #f4f6f9;
 }
 
 /* Main app wrapper */
@@ -23,8 +24,8 @@ html, body {
 /* Sidebar styling - updated with minimalistic design */
 .sidebar {
     width: 330px;
-    background: #e1e1e1;
-    color: #333;
+    background: #34495e;
+    color: #ecf0f1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -43,7 +44,7 @@ html, body {
     text-align: center;
     font-weight: 500;
     letter-spacing: 0.5px;
-    color: #2c3e50;
+    color: #ecf0f1;
 }
 
 /* Section titles */
@@ -53,7 +54,7 @@ html, body {
     margin-bottom: 8px;
     padding-bottom: 6px;
     border-bottom: 1px solid #eaeaea;
-    color: #2c3e50;
+    color: #ecf0f1;
 }
 
 /* Map container - explicitly separated for reliable rendering */
@@ -97,7 +98,7 @@ html, body {
 .date-picker label {
     font-size: 13px;
     font-weight: 500;
-    color: #2c3e50;
+    color: #ecf0f1;
 }
 
 .date-picker input {
@@ -126,7 +127,7 @@ html, body {
 .vehicle-select label {
     font-size: 13px;
     font-weight: 500;
-    color: #2c3e50;
+    color: #ecf0f1;
 }
 
 select {
@@ -156,7 +157,7 @@ select:focus {
 .input-group label {
     font-size: 13px;
     font-weight: 500;
-    color: #2c3e50;
+    color: #ecf0f1;
 }
 
 .input-group input {
@@ -182,26 +183,26 @@ input[readonly] {
 
 /* Button styling - Smaller and more minimalistic */
 button {
-    padding: 8px 12px;
-    background-color: #f8f9fa;
-    color: #2c3e50;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 button:hover {
-    background-color: #ffffff;
-    border-color: #3498db;
-    color: #3498db;
+    background-color: #2980b9;
+    transform: translateY(-2px);
 }
 
 button:active {
-    transform: translateY(1px);
+    background-color: #1c598a;
+    transform: translateY(0);
 }
 
 .button-container {
