@@ -217,6 +217,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }, 100);
 
+        // Make sure the Croatian locale is available or use default
+        try {
+            // Check if Croatian locale is available
+            if (flatpickr.l10ns.hr) {
+                console.log("Croatian locale loaded successfully");
+            } else {
+                console.warn("Croatian locale not available, using default");
+            }
+        } catch (error) {
+            console.warn("Error checking locale:", error);
+        }
+
         // Initialize date pickers with ISO string format
         flatpickr("#dateFrom", {
             enableTime: true,
@@ -224,7 +236,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             time_24hr: true,
             defaultHour: 0,
             defaultMinute: 0,
-            locale: "hr",
+            // Only use Croatian locale if available
+            ...(flatpickr.l10ns.hr ? { locale: "hr" } : {}),
             confirmDate: {
                 showAlways: true,
                 text: "U redu"
@@ -244,7 +257,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             time_24hr: true,
             defaultHour: 23,
             defaultMinute: 59,
-            locale: "hr",
+            // Only use Croatian locale if available
+            ...(flatpickr.l10ns.hr ? { locale: "hr" } : {}),
             confirmDate: {
                 showAlways: true,
                 text: "U redu"

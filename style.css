@@ -82,6 +82,7 @@ html, body {
 /* Converter container */
 .converter-container {
     padding: 15px;
+    background-color: #f8f9fa;
     border-top: 1px solid #eaeaea;
     border-bottom: 1px solid #eaeaea;
 }
@@ -90,7 +91,7 @@ html, body {
 .date-picker {
     display: flex;
     flex-direction: column;
-    gap: a10px;
+    gap: 10px;
     margin-bottom: 8px;
 }
 
