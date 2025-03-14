@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const fetchBtn = document.getElementById('fetchBtn');
     const clearBtn = document.getElementById('clearBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const resultDiv = document.getElementById('result');
     const statusSpan = document.getElementById('status');
     const timestampSpan = document.getElementById('timestamp');
     const tokenInfo = document.getElementById('tokenInfo');
@@ -110,8 +109,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Function to clear results
     function clearResults() {
-        resultDiv.innerHTML = '';
-        resultDiv.className = '';
         statusSpan.textContent = 'Spremno';
         
         // Clear map markers
@@ -297,7 +294,6 @@ function updateAssetId() {
 
 async function searchVehicle() {
     const fetchBtn = document.getElementById('fetchBtn');
-    const resultDiv = document.getElementById('result');
     const statusSpan = document.getElementById('status');
     
     const dateFrom = document.getElementById('dateFrom').value;
@@ -322,8 +318,6 @@ async function searchVehicle() {
     // Verify authentication before proceeding
     const idToken = window.Auth.getIdToken();
     if (!idToken) {
-        resultDiv.innerHTML = '<p>Nema dostupnog tokena za autentifikaciju. Molimo, ponovno se prijavite.</p>';
-        resultDiv.className = 'error';
         statusSpan.textContent = 'Greška autentifikacije';
         setTimeout(() => window.Auth.redirectToLogin(), 2000);
         return;
@@ -331,8 +325,6 @@ async function searchVehicle() {
 
     // Update UI for loading state
     fetchBtn.disabled = true;
-    resultDiv.innerHTML = '';
-    resultDiv.className = '';
     statusSpan.textContent = 'Dohvaćanje podataka...';
     
     // Show central loading notification
@@ -399,7 +391,6 @@ async function searchVehicle() {
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
                 // Token might be invalid or expired
-                resultDiv.innerHTML = '<p>Vaša sesija je istekla. Preusmjeravanje na prijavu...</p>';
                 setTimeout(() => window.Auth.redirectToLogin(), 2000);
                 throw new Error('Authentication required');
             }
@@ -443,7 +434,6 @@ async function searchVehicle() {
             showCentralNotification(false);
         }, 3000);
         
-        resultDiv.className = 'error';
         statusSpan.textContent = 'Greška';
     } finally {
         // Re-enable button regardless of outcome
@@ -525,17 +515,17 @@ function displayDataOnMap(data) {
         // Add marker with more detailed popup
         L.marker([lat, lng], { icon })
             .bindPopup(`
-                <strong>Time:</strong> ${timestamp}<br>
-                <strong>Vehicle:</strong> ${vehicleName}<br>
+                <strong>Vrijeme:</strong> ${timestamp}<br>
+                <strong>Vozilo:</strong> ${vehicleName}<br>
                 <strong>RFID:</strong> ${rfidValue}<br>
-                <strong>Location:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                ${point.VrstaObjekta ? `<br><strong>Object Type:</strong> ${point.VrstaObjekta}` : ''}
-                ${point.SifraObjekta ? `<br><strong>Object Code:</strong> ${point.SifraObjekta}` : ''}
-                ${point.NazivObjekta ? `<br><strong>Object Name:</strong> ${point.NazivObjekta}` : ''}
-                ${point.Ulica ? `<br><strong>Street:</strong> ${point.Ulica}` : ''}
-                ${point.KucniBroj ? `<br><strong>House Number:</strong> ${point.KucniBroj}` : ''}
-                ${point.DatumAktivacije ? `<br><strong>Activation Date:</strong> ${point.DatumAktivacije}` : ''}
-                ${point.ZajednickaPostuda ? `<br><strong>Shared Container:</strong> ${point.ZajednickaPostuda}` : ''}
+                <strong>Lokacija:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                ${point.VrstaObjekta ? `<br><strong>Vrsta objekta:</strong> ${point.VrstaObjekta}` : ''}
+                ${point.SifraObjekta ? `<br><strong>Šifra objekta:</strong> ${point.SifraObjekta}` : ''}
+                ${point.NazivObjekta ? `<br><strong>Naziv objekta:</strong> ${point.NazivObjekta}` : ''}
+                ${point.Ulica ? `<br><strong>Ulica:</strong> ${point.Ulica}` : ''}
+                ${point.KucniBroj ? `<br><strong>Kućni broj:</strong> ${point.KucniBroj}` : ''}
+                ${point.DatumAktivacije ? `<br><strong>Datum aktivacije:</strong> ${point.DatumAktivacije}` : ''}
+                ${point.ZajednickaPostuda ? `<br><strong>Zajednička posuda:</strong> ${point.ZajednickaPostuda}` : ''}
             `)
             .addTo(window.markersLayer);
     });
