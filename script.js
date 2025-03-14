@@ -549,7 +549,8 @@ function displayDataOnMap(data) {
 
 function hexToDecimal(hexString) {
     if (!hexString || typeof hexString !== 'string') return '';
-    return parseInt(hexString.replace(/^0x/, ''), 16).toString();
+    // Use BigInt for precise conversion of large hex numbers
+    return BigInt('0x' + hexString.replace(/^0x/, '')).toString();
 }
 
 function decimalToHex(decimalString) {
