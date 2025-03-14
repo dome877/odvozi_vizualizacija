@@ -90,7 +90,6 @@ html, body {
 .date-picker {
     display: flex;
     flex-direction: column;
-    margin-bottom: 8px;
 }
 
 .date-picker label {
@@ -148,8 +147,7 @@ select:focus {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 
 .input-group label {
