@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Tracking GIS</title>
+    <title>Praćenje vozila - GIS sustav</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -13,7 +13,7 @@
     <!-- Loading overlay -->
     <div id="loading" class="loading-overlay">
         <div class="loading-content">
-            <p>Authenticating...</p>
+            <p>Autentifikacija...</p>
         </div>
     </div>
 
@@ -21,36 +21,39 @@
     <div class="app-wrapper">
         <!-- Sidebar -->
         <div class="sidebar">
-            <h1>Vehicle Tracking</h1>
+            <div class="sidebar-header">
+                <h1>Praćenje vozila</h1>
+            </div>
             
             <!-- Auth information -->
             <div class="auth-container">
                 <div id="tokenInfo" class="auth-info"></div>
                 <div class="auth-controls">
-                    <button id="logoutBtn" class="auth-btn">Logout</button>
+                    <button id="logoutBtn" class="auth-btn">Odjava</button>
                 </div>
                 <div class="auth-status">
-                    <span id="status">Ready</span>
+                    <span id="status">Spremno</span>
                     <span id="timestamp"></span>
                 </div>
             </div>
 
             <!-- Filters -->
             <div class="filter-container">
+                <h2 class="section-title">Pretraga</h2>
                 <!-- Date pickers -->
                 <div class="date-picker">
-                    <label for="dateFrom">From:</label>
-                    <input type="text" id="dateFrom" placeholder="Select start date...">
+                    <label for="dateFrom">Od datuma:</label>
+                    <input type="text" id="dateFrom" placeholder="Odaberite početni datum...">
                     
-                    <label for="dateTo">To:</label>
-                    <input type="text" id="dateTo" placeholder="Select end date...">
+                    <label for="dateTo">Do datuma:</label>
+                    <input type="text" id="dateTo" placeholder="Odaberite završni datum...">
                 </div>
 
                 <!-- Vehicle selection -->
                 <div class="vehicle-select">
-                    <label for="vehicleSelect">Select Vehicle:</label>
+                    <label for="vehicleSelect">Odaberite vozilo:</label>
                     <select id="vehicleSelect" onchange="updateAssetId()">
-                        <option value="">Select a vehicle...</option>
+                        <option value="">Odaberite vozilo...</option>
                         <option value="1770">ŠI-181GO (Mercedes Atego)</option>
                         <option value="1952">ŠI-237HO (MAN TGM)</option>
                         <option value="2364">ŠI-315IU (Volvo)</option>
@@ -65,7 +68,7 @@
                 <!-- RFID Input -->
                 <div class="input-group">
                     <label for="rfidInput">RFID:</label>
-                    <input type="text" id="rfidInput" placeholder="Enter RFID...">
+                    <input type="text" id="rfidInput" placeholder="Unesite RFID...">
                 </div>
 
                 <!-- Hidden Asset ID field -->
@@ -77,39 +80,37 @@
                 <div class="input-group box-filter">
                     <label for="useBoxFilter">
                         <input type="checkbox" id="useBoxFilter" />
-                        Filter by map box
+                        Filtriraj po području
                     </label>
                     <div id="boxInfo" style="display:none; margin-top: 5px; font-size: 0.8em; color: #666;"></div>
-                    <div class="box-instructions">Draw a rectangle on the map to filter by area</div>
+                    <div class="box-instructions">Nacrtajte pravokutnik na karti za filtriranje po području</div>
                 </div>
 
                 <!-- Action buttons -->
                 <div class="button-container">
-                    <button id="fetchBtn">Track Vehicle</button>
-                    <button id="clearBtn">Clear Results</button>
+                    <button id="fetchBtn">Prikaži kretanje</button>
+                    <button id="clearBtn">Očisti rezultate</button>
                 </div>
             </div>
             
             <!-- Hex to Decimal Converter -->
             <div class="converter-container">
-                <h3>Hex to Decimal Converter</h3>
+                <h2 class="section-title">HEX u Decimalni pretvarač</h2>
                 <div class="input-group">
-                    <label for="hexInput">Hex Value:</label>
-                    <input type="text" id="hexInput" placeholder="Enter hex value...">
+                    <label for="hexInput">HEX vrijednost:</label>
+                    <input type="text" id="hexInput" placeholder="Unesite HEX vrijednost...">
                 </div>
                 <div class="input-group">
-                    <label for="decimalOutput">Decimal Value:</label>
+                    <label for="decimalOutput">Decimalna vrijednost:</label>
                     <input type="text" id="decimalOutput" readonly>
                 </div>
                 <div class="button-container">
-                    <button id="convertBtn">Convert</button>
+                    <button id="convertBtn">Pretvori</button>
                 </div>
             </div>
             
-            <!-- Results container -->
-            <div id="result" class="result-container">
-                <p>API response will appear here...</p>
-            </div>
+            <!-- Status indicator instead of results container -->
+            <div id="result" class="status-indicator"></div>
         </div>
         
         <!-- Map container -->
@@ -123,6 +124,8 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/hr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.js"></script>
     <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>

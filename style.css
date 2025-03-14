@@ -9,7 +9,7 @@
 html, body {
     height: 100%;
     width: 100%;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     color: #333;
 }
 
@@ -20,21 +20,39 @@ html, body {
     width: 100%;
 }
 
-/* Sidebar styling */
+/* Sidebar styling - updated with modern design */
 .sidebar {
     width: 350px;
-    background-color: #2c3e50;
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
     color: white;
-    padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
 }
 
-.sidebar h1 {
-    margin-bottom: 20px;
+.sidebar-header {
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h1 {
+    margin: 0;
     font-size: 24px;
     text-align: center;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* Section titles */
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ecf0f1;
 }
 
 /* Map container - explicitly separated for reliable rendering */
@@ -57,6 +75,15 @@ html, body {
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
+    padding: 20px;
+}
+
+/* Converter container */
+.converter-container {
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Date picker styling */
@@ -64,10 +91,13 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-bottom: 15px;
 }
 
 .date-picker label {
     font-size: 14px;
+    font-weight: 500;
+    color: #ecf0f1;
 }
 
 .date-picker input {
@@ -75,6 +105,13 @@ html, body {
     border: none;
     border-radius: 5px;
     font-size: 14px;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.date-picker input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
 }
 
 /* Vehicle select styling */
@@ -82,10 +119,13 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-bottom: 15px;
 }
 
 .vehicle-select label {
     font-size: 14px;
+    font-weight: 500;
+    color: #ecf0f1;
 }
 
 select {
@@ -94,6 +134,13 @@ select {
     border-radius: 5px;
     font-size: 14px;
     width: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
 }
 
 /* Input group styling */
@@ -101,11 +148,13 @@ select {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .input-group label {
     font-size: 14px;
+    font-weight: 500;
+    color: #ecf0f1;
 }
 
 .input-group input {
@@ -114,32 +163,49 @@ select {
     border-radius: 5px;
     font-size: 14px;
     width: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
 }
 
 input[readonly] {
-    background-color: #ecf0f1;
+    background-color: rgba(236, 240, 241, 0.7);
     color: #7f8c8d;
 }
 
 /* Button styling */
 button {
     padding: 12px;
-    background-color: #3498db;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 button:hover {
-    background-color: #2980b9;
+    background: linear-gradient(135deg, #2980b9 0%, #2573a7 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
 
 .button-container {
     display: flex;
     gap: 10px;
+    margin-top: 5px;
 }
 
 .button-container button {
@@ -148,11 +214,11 @@ button:hover {
 
 /* Auth container */
 .auth-container {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: rgba(248, 249, 250, 0.9);
-    border-radius: 8px;
-    color: #333;
+    margin-bottom: 5px;
+    padding: 15px 20px;
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #ecf0f1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .auth-info {
@@ -165,63 +231,59 @@ button:hover {
 }
 
 .auth-btn {
-    background-color: #dc3545;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     color: white;
     border: none;
     padding: 8px 15px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .auth-btn:hover {
-    background-color: #c82333;
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
 }
 
 .auth-status {
     display: flex;
     justify-content: space-between;
     font-size: 0.8rem;
-    color: #6c757d;
+    color: #bdc3c7;
     padding-top: 10px;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Results container */
-.result-container {
-    margin-top: 20px;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: rgba(248, 249, 250, 0.9);
-    overflow-y: auto;
-    max-height: 300px;
-    color: #333;
-}
-
-.result-container pre {
-    white-space: pre-wrap;
-    word-break: break-word;
+/* Status indicator */
+.status-indicator {
+    margin: 15px 20px;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #ecf0f1;
+    min-height: 40px;
 }
 
 /* Status classes */
 .success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
     padding: 10px;
     border-radius: 5px;
 }
 
 .error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
     padding: 10px;
     border-radius: 5px;
 }
 
 .loading {
-    color: #0c5460;
+    color: #3498db;
     text-align: center;
     padding: 15px;
 }
@@ -257,11 +319,49 @@ button:hover {
 /* Flatpickr customization */
 .flatpickr-calendar {
     background: #34495e;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: none;
+    margin-top: 5px;
+}
+
+.flatpickr-day {
+    border-radius: 5px;
 }
 
 .flatpickr-day.selected {
     background: #3498db;
     border-color: #3498db;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.flatpickr-day:hover {
+    background: rgba(52, 152, 219, 0.3);
+}
+
+.flatpickr-months {
+    padding-top: 5px;
+}
+
+.flatpickr-current-month {
+    font-size: 16px;
+}
+
+/* Custom flatpickr confirm button */
+.flatpickr-confirm {
+    background: #3498db;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px auto 10px;
+    width: 80%;
+    text-align: center;
+    display: block;
+}
+
+.flatpickr-confirm:hover {
+    background: #2980b9;
 }
 
 /* Media queries for responsive design */
@@ -284,9 +384,9 @@ button:hover {
 /* Box filter styling */
 .box-filter {
     margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.1);
     border-radius: 5px;
 }
 
@@ -294,24 +394,29 @@ button:hover {
     display: flex;
     align-items: center;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .box-filter input[type="checkbox"] {
     margin-right: 8px;
+    width: 16px;
+    height: 16px;
 }
 
 #boxInfo {
     background-color: rgba(0, 0, 0, 0.2);
-    padding: 5px;
-    border-radius: 3px;
+    padding: 8px;
+    border-radius: 5px;
     font-family: monospace;
-    margin-top: 8px;
+    font-size: 12px;
+    margin-top: 10px;
 }
 
 .box-instructions {
     font-size: 0.8em;
-    color: #aaa;
-    margin-top: 5px;
+    color: #bdc3c7;
+    margin-top: 8px;
     font-style: italic;
 }
 

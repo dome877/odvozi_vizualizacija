@@ -42,10 +42,18 @@ document.addEventListener('DOMContentLoaded', async function() {
                     const payload = JSON.parse(atob(tokenParts[1]));
                     const expiry = new Date(payload.exp * 1000);
                     
+                    const options = { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    };
+                    
                     if (tokenInfo) {
                         tokenInfo.innerHTML = `
-                            <p>Logged in as: <strong>${payload.email || payload['cognito:username'] || 'User'}</strong></p>
-                            <p>Token expires: <strong>${expiry.toLocaleString()}</strong></p>
+                            <p>Prijavljeni korisnik: <strong>${payload.email || payload['cognito:username'] || 'Korisnik'}</strong></p>
+                            <p>Token ističe: <strong>${expiry.toLocaleDateString('hr-HR', options)}</strong></p>
                         `;
                     }
                 }
@@ -57,9 +65,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Function to clear results
     function clearResults() {
-        resultDiv.innerHTML = '<p>API response will appear here...</p>';
+        resultDiv.innerHTML = '';
         resultDiv.className = '';
-        statusSpan.textContent = 'Ready';
+        statusSpan.textContent = 'Spremno';
         
         // Clear map markers
         if (window.markersLayer) {
@@ -83,7 +91,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Function to update timestamp
     function updateTimestamp() {
         const now = new Date();
-        timestampSpan.textContent = now.toLocaleString();
+        const options = { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+        };
+        timestampSpan.textContent = now.toLocaleDateString('hr-HR', options);
     }
 
     // Initialize the app functionality
@@ -179,7 +195,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             dateFormat: "Y-m-d H:i:00",
             time_24hr: true,
             defaultHour: 0,
-            defaultMinute: 0
+            defaultMinute: 0,
+            locale: "hr",
+            confirmDate: {
+                showAlways: true,
+                text: "U redu"
+            },
+            plugins: [
+                new confirmDatePlugin({
+                    confirmText: "U redu",
+                    confirmIcon: "",
+                    showAlways: true
+                })
+            ]
         });
 
         flatpickr("#dateTo", {
@@ -187,7 +215,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             dateFormat: "Y-m-d H:i:00",
             time_24hr: true,
             defaultHour: 23,
-            defaultMinute: 59
+            defaultMinute: 59,
+            locale: "hr",
+            confirmDate: {
+                showAlways: true,
+                text: "U redu"
+            },
+            plugins: [
+                new confirmDatePlugin({
+                    confirmText: "U redu",
+                    confirmIcon: "",
+                    showAlways: true
+                })
+            ]
         });
 
         // Set up hex-to-decimal converter
@@ -234,31 +274,31 @@ async function searchVehicle() {
     console.log('Input values:', { dateFrom, dateTo, rfidInput, assetId, useBoxFilter }); // Debug log
 
     if (!dateFrom || !dateTo) {
-        alert('Please select dates');
+        alert('Molimo odaberite datume');
         return;
     }
     
     // Check if box filter is enabled but no box is drawn
     if (useBoxFilter && !window.drawnBounds) {
-        alert('Please draw a box on the map first');
+        alert('Molimo nacrtajte pravokutnik na karti');
         return;
     }
     
     // Verify authentication before proceeding
     const idToken = window.Auth.getIdToken();
     if (!idToken) {
-        resultDiv.innerHTML = '<p>No authentication token available. Please log in again.</p>';
+        resultDiv.innerHTML = '<p>Nema dostupnog tokena za autentifikaciju. Molimo, ponovno se prijavite.</p>';
         resultDiv.className = 'error';
-        statusSpan.textContent = 'Authentication error';
+        statusSpan.textContent = 'Greška autentifikacije';
         setTimeout(() => window.Auth.redirectToLogin(), 2000);
         return;
     }
 
     // Update UI for loading state
     fetchBtn.disabled = true;
-    resultDiv.innerHTML = '<p class="loading">Loading data...</p>';
+    resultDiv.innerHTML = '<p class="loading">Učitavanje podataka...</p>';
     resultDiv.className = '';
-    statusSpan.textContent = 'Fetching data...';
+    statusSpan.textContent = 'Dohvaćanje podataka...';
 
     try {
         const formatDate = (dateString) => {
@@ -321,11 +361,11 @@ async function searchVehicle() {
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
                 // Token might be invalid or expired
-                resultDiv.innerHTML = '<p>Your session has expired. Redirecting to login...</p>';
+                resultDiv.innerHTML = '<p>Vaša sesija je istekla. Preusmjeravanje na prijavu...</p>';
                 setTimeout(() => window.Auth.redirectToLogin(), 2000);
                 throw new Error('Authentication required');
             }
-            throw new Error(`Data fetch failed: ${response.statusText}`);
+            throw new Error(`Neuspješno dohvaćanje podataka: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -339,9 +379,9 @@ async function searchVehicle() {
         });
 
         // Update status without showing raw data
-        resultDiv.innerHTML = '<p>Data fetched successfully</p>';
+        resultDiv.innerHTML = '<p>Podaci uspješno dohvaćeni</p>';
         resultDiv.className = 'success';
-        statusSpan.textContent = 'Data fetched successfully';
+        statusSpan.textContent = 'Podaci uspješno dohvaćeni';
         
         // Update timestamp
         updateTimestamp();
@@ -349,30 +389,13 @@ async function searchVehicle() {
         displayDataOnMap(data);
 
     } catch (error) {
-        console.error('Detailed error:', {
-            message: error.message,
-            stack: error.stack
-        });
-        
-        resultDiv.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+        console.error('Error fetching data:', error);
+        resultDiv.innerHTML = `<p>Greška: ${error.message}</p>`;
         resultDiv.className = 'error';
-        statusSpan.textContent = 'Error occurred';
-        
-        // Update timestamp
-        updateTimestamp();
-        
-        alert(error.message || 'Error fetching data');
+        statusSpan.textContent = 'Greška';
     } finally {
-        // Re-enable button
+        // Re-enable button regardless of outcome
         fetchBtn.disabled = false;
-    }
-}
-
-function updateTimestamp() {
-    const now = new Date();
-    const timestampSpan = document.getElementById('timestamp');
-    if (timestampSpan) {
-        timestampSpan.textContent = now.toLocaleString();
     }
 }
 
