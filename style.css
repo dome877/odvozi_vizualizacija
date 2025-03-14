@@ -90,7 +90,6 @@ html, body {
 .date-picker {
     display: flex;
     flex-direction: column;
-    gap: 10px;
     margin-bottom: 8px;
 }
 
@@ -305,7 +304,6 @@ button:active {
 /* Keep the remaining styles as they are... but update these specific ones */
 
 .box-filter {
-    margin-top: 5px;
     background-color: #f8f9fa;
     padding: 8px;
     border-radius: 4px;
