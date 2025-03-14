@@ -118,7 +118,7 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 
 .vehicle-select label {
