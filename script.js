@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://gfa97tr7ff.execute-api.eu-north-1.amazonaws.com/prod/ecomobile-lambda';
+const API_BASE_URL = 'https://5m9qq9zf4h.execute-api.eu-north-1.amazonaws.com/prod';
 
 // Function to toggle the converter section
 function toggleConverter() {
@@ -307,6 +307,89 @@ function updateAssetId() {
     assetIdInput.value = select.value;
 }
 
+// Function to create a new job
+async function createJob(params) {
+    const idToken = window.Auth.getIdToken();
+    if (!idToken) {
+        throw new Error('Authentication required');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/jobs`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            setTimeout(() => window.Auth.redirectToLogin(), 2000);
+            throw new Error('Authentication required');
+        }
+        const errorText = await response.text();
+        throw new Error(`Failed to create job: ${errorText}`);
+    }
+
+    return await response.json();
+}
+
+// Function to check job status
+async function checkJobStatus(jobId) {
+    const idToken = window.Auth.getIdToken();
+    if (!idToken) {
+        throw new Error('Authentication required');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+        }
+    });
+
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            setTimeout(() => window.Auth.redirectToLogin(), 2000);
+            throw new Error('Authentication required');
+        }
+        const errorText = await response.text();
+        throw new Error(`Failed to check job status: ${errorText}`);
+    }
+
+    return await response.json();
+}
+
+// Function to retrieve job results
+async function getJobResults(jobId) {
+    const idToken = window.Auth.getIdToken();
+    if (!idToken) {
+        throw new Error('Authentication required');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/result`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+        }
+    });
+
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            setTimeout(() => window.Auth.redirectToLogin(), 2000);
+            throw new Error('Authentication required');
+        }
+        const errorText = await response.text();
+        throw new Error(`Failed to retrieve job results: ${errorText}`);
+    }
+
+    return await response.json();
+}
+
+// Main function to handle the search process
 async function searchVehicle() {
     const fetchBtn = document.getElementById('fetchBtn');
     const statusSpan = document.getElementById('status');
@@ -340,10 +423,10 @@ async function searchVehicle() {
 
     // Update UI for loading state
     fetchBtn.disabled = true;
-    statusSpan.textContent = 'Dohvaćanje podataka...';
+    statusSpan.textContent = 'Kreiranje zadatka...';
     
     // Show central loading notification
-    showCentralNotification(true, 'Učitavanje podataka...', true);
+    showCentralNotification(true, 'Kreiranje zadatka...', true);
 
     try {
         const formatDate = (dateString) => {
@@ -361,67 +444,90 @@ async function searchVehicle() {
             return formattedDate;
         };
 
-        const params = new URLSearchParams({
+        // Prepare params for job creation
+        const params = {
             dateFrom: formatDate(dateFrom),
-            dateTo: formatDate(dateTo)
-        });
+            dateTo: formatDate(dateTo),
+            filterByBox: useBoxFilter ? 'true' : 'false'
+        };
 
         if (assetId) {
-            params.append('assetId', assetId);
+            params.assetId = assetId;
         }
 
         if (rfidInput) {
-            params.append('RFID', rfidInput);
+            params.RFID = rfidInput;
         }
         
         // Add box filter parameters if enabled
         if (useBoxFilter && window.drawnBounds) {
             const bounds = window.drawnBounds;
-            params.append('filterByBox', 'true');
-            params.append('minLat', bounds.getSouth().toFixed(7));
-            params.append('maxLat', bounds.getNorth().toFixed(7));
-            params.append('minLng', bounds.getWest().toFixed(7));
-            params.append('maxLng', bounds.getEast().toFixed(7));
+            params.minLat = bounds.getSouth().toFixed(7);
+            params.maxLat = bounds.getNorth().toFixed(7);
+            params.minLng = bounds.getWest().toFixed(7);
+            params.maxLng = bounds.getEast().toFixed(7);
             console.log('Adding box filter:', {
                 minLat: bounds.getSouth().toFixed(7),
                 maxLat: bounds.getNorth().toFixed(7),
                 minLng: bounds.getWest().toFixed(7),
                 maxLng: bounds.getEast().toFixed(7)
             });
-        } else {
-            params.append('filterByBox', 'false');
         }
 
-        console.log('Sending request with params:', params.toString());
+        console.log('Creating job with params:', params);
 
-        // Direct API Gateway request
-        const response = await fetch(`${API_BASE_URL}?${params}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
-            }
-        });
+        // Step 1: Create a new job
+        const jobData = await createJob(params);
+        const jobId = jobData.jobId;
+        
+        console.log('Job created:', jobData);
+        statusSpan.textContent = `Zadatak kreiran (ID: ${jobId}). Provjera statusa...`;
+        showCentralNotification(true, `Zadatak kreiran (ID: ${jobId}). Provjera statusa...`, true);
 
-        if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-                // Token might be invalid or expired
-                setTimeout(() => window.Auth.redirectToLogin(), 2000);
-                throw new Error('Authentication required');
+        // Step 2: Poll for job status until completion or failure
+        let status = 'PENDING';
+        let maxAttempts = 30; // Maximum number of polling attempts
+        let pollInterval = 5000; // Polling interval in milliseconds (5 seconds)
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            // Wait for the polling interval before checking again
+            if (attempt > 0) {
+                await new Promise(resolve => setTimeout(resolve, pollInterval));
             }
-            throw new Error(`Neuspješno dohvaćanje podataka: ${response.statusText}`);
+            
+            const statusData = await checkJobStatus(jobId);
+            status = statusData.status;
+            
+            console.log(`Job status (attempt ${attempt + 1}/${maxAttempts}):`, statusData);
+            statusSpan.textContent = `Status zadatka: ${status} (Pokušaj ${attempt + 1}/${maxAttempts})`;
+            showCentralNotification(true, `Status zadatka: ${status} (Pokušaj ${attempt + 1}/${maxAttempts})`, true);
+            
+            if (status === 'COMPLETED') {
+                console.log('Job completed successfully!');
+                break;
+            } else if (status === 'FAILED') {
+                throw new Error(`Job failed: ${statusData.error || 'Unknown error'}`);
+            }
+        }
+        
+        if (status !== 'COMPLETED') {
+            throw new Error('Job did not complete within the timeout period.');
         }
 
-        const data = await response.json();
+        // Step 3: Get job results
+        console.log('Retrieving job results...');
+        statusSpan.textContent = 'Dohvaćanje rezultata...';
+        showCentralNotification(true, 'Dohvaćanje rezultata...', true);
+        
+        const resultData = await getJobResults(jobId);
         
         // Log data but don't display in result div
-        console.log('Response headers:', response.headers);
-        console.log('Raw response from server:', data);
-        console.log('Response type:', typeof data);
+        console.log('Raw response from server:', resultData);
+        console.log('Response type:', typeof resultData);
         console.log('Response structure:', {
-            isArray: Array.isArray(data),
-            hasRoot: data?.root !== undefined,
-            length: Array.isArray(data) ? data.length : (data?.root?.length || 0)
+            isArray: Array.isArray(resultData),
+            hasRoot: resultData?.root !== undefined,
+            length: Array.isArray(resultData) ? resultData.length : (resultData?.root?.length || 0)
         });
 
         // Show success notification briefly
@@ -438,10 +544,11 @@ async function searchVehicle() {
         // Update timestamp
         updateTimestamp();
 
-        displayDataOnMap(data);
+        // Display the results on the map
+        displayDataOnMap(resultData);
 
     } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error in search process:', error);
         
         // Show error in central notification
         showCentralNotification(true, `Greška: ${error.message}`, false);
@@ -449,7 +556,7 @@ async function searchVehicle() {
             showCentralNotification(false);
         }, 3000);
         
-        statusSpan.textContent = 'Greška';
+        statusSpan.textContent = `Greška: ${error.message}`;
     } finally {
         // Re-enable button regardless of outcome
         fetchBtn.disabled = false;
