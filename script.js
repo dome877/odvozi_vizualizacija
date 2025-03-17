@@ -314,6 +314,7 @@ async function createJob(params) {
         throw new Error('Authentication required');
     }
 
+    console.log('Sending job creation request with params:', params);
     const requestBody = params.queryParams ? params : { queryParams: params };
 
 
