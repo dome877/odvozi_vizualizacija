@@ -314,13 +314,16 @@ async function createJob(params) {
         throw new Error('Authentication required');
     }
 
+    const requestBody = params.queryParams ? params : { queryParams: params };
+
+
     const response = await fetch(`${API_BASE_URL}/jobs`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${idToken}`
         },
-        body: JSON.stringify(params)
+        body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
