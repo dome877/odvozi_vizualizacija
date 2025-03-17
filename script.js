@@ -314,6 +314,9 @@ async function createJob(params) {
         throw new Error('Authentication required');
     }
 
+    console.log('Sending job creation request with params:', params);
+
+    // Try with JSON body approach - the API likely expects the parameters in the body
     const response = await fetch(`${API_BASE_URL}/jobs`, {
         method: 'POST',
         headers: {
@@ -328,11 +331,27 @@ async function createJob(params) {
             setTimeout(() => window.Auth.redirectToLogin(), 2000);
             throw new Error('Authentication required');
         }
+        
+        // Improved error logging
         const errorText = await response.text();
-        throw new Error(`Failed to create job: ${errorText}`);
+        console.error('Job creation error details:', {
+            status: response.status,
+            statusText: response.statusText,
+            responseText: errorText
+        });
+        
+        throw new Error(`Failed to create job: ${response.status} ${response.statusText}`);
     }
 
-    return await response.json();
+    // More detailed response handling
+    try {
+        const jsonResponse = await response.json();
+        console.log('Job creation response:', jsonResponse);
+        return jsonResponse;
+    } catch (e) {
+        console.error('Error parsing job creation response:', e);
+        throw new Error('Invalid response format from job creation endpoint');
+    }
 }
 
 // Function to check job status
@@ -448,7 +467,7 @@ async function searchVehicle() {
         const params = {
             dateFrom: formatDate(dateFrom),
             dateTo: formatDate(dateTo),
-            filterByBox: useBoxFilter ? 'true' : 'false'
+            filterByBox: useBoxFilter
         };
 
         if (assetId) {
@@ -462,15 +481,15 @@ async function searchVehicle() {
         // Add box filter parameters if enabled
         if (useBoxFilter && window.drawnBounds) {
             const bounds = window.drawnBounds;
-            params.minLat = bounds.getSouth().toFixed(7);
-            params.maxLat = bounds.getNorth().toFixed(7);
-            params.minLng = bounds.getWest().toFixed(7);
-            params.maxLng = bounds.getEast().toFixed(7);
-            console.log('Adding box filter:', {
-                minLat: bounds.getSouth().toFixed(7),
-                maxLat: bounds.getNorth().toFixed(7),
-                minLng: bounds.getWest().toFixed(7),
-                maxLng: bounds.getEast().toFixed(7)
+            params.minLat = parseFloat(bounds.getSouth().toFixed(7));
+            params.maxLat = parseFloat(bounds.getNorth().toFixed(7));
+            params.minLng = parseFloat(bounds.getWest().toFixed(7));
+            params.maxLng = parseFloat(bounds.getEast().toFixed(7));
+            console.log('Adding box filter coordinates:', {
+                minLat: params.minLat,
+                maxLat: params.maxLat,
+                minLng: params.minLng,
+                maxLng: params.maxLng
             });
         }
 
