@@ -4,7 +4,7 @@
 const CONFIG = {
   cognitoUrl: 'https://eu-north-1bad4kil2h.auth.eu-north-1.amazoncognito.com',
   clientId: 'sufnmmml754ju6m6en2cerr4t',
-  redirectUri: window.location.origin + window.location.pathname,
+  redirectUri: window.location.origin,
   tokenExchangeUrl: 'https://0izwpxiog3.execute-api.eu-north-1.amazonaws.com/prod/token-exchange', // Update with your API Gateway URL
   scope: 'email openid phone'
 };
