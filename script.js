@@ -573,6 +573,15 @@ function displayDataOnMap(data) {
         window.markersLayer.clearLayers();
     }
 
+    // Clear existing list
+    const listContainer = document.getElementById('pickupList');
+    if (listContainer) {
+        listContainer.innerHTML = '';
+    } else {
+        // Create list container if it doesn't exist
+        createPickupListContainer();
+    }
+
     // First, log the raw data for debugging
     console.log('Raw data received:', data);
 
@@ -605,8 +614,19 @@ function displayDataOnMap(data) {
         return;
     }
 
+    // Set total count in list header
+    const listHeader = document.getElementById('pickupListHeader');
+    if (listHeader) {
+        listHeader.textContent = `Locations (${validPoints.length})`;
+    }
+
+    // Sort points by dateTime (newest first)
+    const sortedPoints = [...validPoints].sort((a, b) => {
+        return new Date(b.dateTime) - new Date(a.dateTime);
+    });
+
     // Process valid points
-    validPoints.forEach(point => {
+    sortedPoints.forEach((point, index) => {
         const lat = parseFloat(point.latitude);
         const lng = parseFloat(point.longitude);
         const timestamp = point.dateTime;
@@ -621,12 +641,16 @@ function displayDataOnMap(data) {
         // - Yellow: Has RFID but no object info
         // - Green: Has both RFID and object info
         let iconUrl;
+        let iconColor;
         if (!hasValidRfid) {
             iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png';
+            iconColor = 'red';
         } else if (!hasObjectInfo) {
             iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png';
+            iconColor = 'yellow';
         } else {
             iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
+            iconColor = 'green';
         }
 
         const icon = L.icon({
@@ -638,22 +662,28 @@ function displayDataOnMap(data) {
             shadowSize: [24, 24]
         });
 
-        // Add marker with more detailed popup
-        L.marker([lat, lng], { icon })
-            .bindPopup(`
-                <strong>Vrijeme:</strong> ${timestamp}<br>
-                <strong>Vozilo:</strong> ${vehicleName}<br>
-                <strong>RFID:</strong> ${rfidValue}<br>
-                <strong>Lokacija:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                ${point.VrstaObjekta ? `<br><strong>Vrsta objekta:</strong> ${point.VrstaObjekta}` : ''}
-                ${point.SifraObjekta ? `<br><strong>Šifra objekta:</strong> ${point.SifraObjekta}` : ''}
-                ${point.NazivObjekta ? `<br><strong>Naziv objekta:</strong> ${point.NazivObjekta}` : ''}
-                ${point.Ulica ? `<br><strong>Ulica:</strong> ${point.Ulica}` : ''}
-                ${point.KucniBroj ? `<br><strong>Kućni broj:</strong> ${point.KucniBroj}` : ''}
-                ${point.DatumAktivacije ? `<br><strong>Datum aktivacije:</strong> ${point.DatumAktivacije}` : ''}
-                ${point.ZajednickaPostuda ? `<br><strong>Zajednička posuda:</strong> ${point.ZajednickaPostuda}` : ''}
-            `)
+        // Create popup content
+        const popupContent = `
+            <strong>Vrijeme:</strong> ${timestamp}<br>
+            <strong>Vozilo:</strong> ${vehicleName}<br>
+            <strong>RFID:</strong> ${rfidValue}<br>
+            <strong>Lokacija:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
+            ${point.VrstaObjekta ? `<br><strong>Vrsta objekta:</strong> ${point.VrstaObjekta}` : ''}
+            ${point.SifraObjekta ? `<br><strong>Šifra objekta:</strong> ${point.SifraObjekta}` : ''}
+            ${point.NazivObjekta ? `<br><strong>Naziv objekta:</strong> ${point.NazivObjekta}` : ''}
+            ${point.Ulica ? `<br><strong>Ulica:</strong> ${point.Ulica}` : ''}
+            ${point.KucniBroj ? `<br><strong>Kućni broj:</strong> ${point.KucniBroj}` : ''}
+            ${point.DatumAktivacije ? `<br><strong>Datum aktivacije:</strong> ${point.DatumAktivacije}` : ''}
+            ${point.ZajednickaPostuda ? `<br><strong>Zajednička posuda:</strong> ${point.ZajednickaPostuda}` : ''}
+        `;
+
+        // Add marker with popup
+        const marker = L.marker([lat, lng], { icon })
+            .bindPopup(popupContent)
             .addTo(window.markersLayer);
+
+        // Add to list view
+        addPointToList(point, index, iconColor, marker);
     });
 
     // Draw route line if RFID filter is active
@@ -670,6 +700,212 @@ function displayDataOnMap(data) {
             opacity: 0.7,
             dashArray: '5, 10'
         }).addTo(window.markersLayer);
+    }
+}
+
+// Function to create the pickup list container
+function createPickupListContainer() {
+    // Create parent container if not exists
+    if (!document.getElementById('pickupListContainer')) {
+        const container = document.createElement('div');
+        container.id = 'pickupListContainer';
+        container.className = 'pickup-list-container';
+        
+        // Create header with count
+        const header = document.createElement('div');
+        header.id = 'pickupListHeader';
+        header.className = 'pickup-list-header';
+        header.textContent = 'Locations';
+        
+        // Create list element
+        const list = document.createElement('div');
+        list.id = 'pickupList';
+        list.className = 'pickup-list';
+        
+        // Append to container
+        container.appendChild(header);
+        container.appendChild(list);
+        
+        // Get the map container's parent and insert the list container after it
+        const appContainer = document.querySelector('.app-container') || document.body;
+        appContainer.appendChild(container);
+        
+        // Add styles
+        addPickupListStyles();
+    }
+}
+
+// Function to add a point to the list
+function addPointToList(point, index, iconColor, marker) {
+    const list = document.getElementById('pickupList');
+    if (!list) return;
+    
+    const date = new Date(point.dateTime);
+    const timeStr = date.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = date.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit' });
+    
+    // Create list item
+    const item = document.createElement('div');
+    item.className = 'pickup-item';
+    item.setAttribute('data-index', index);
+    
+    // Generate minimalistic display content
+    let itemContent = `
+        <div class="pickup-item-color ${iconColor}"></div>
+        <div class="pickup-item-time">${timeStr}, ${dateStr}</div>
+        <div class="pickup-item-info">
+    `;
+    
+    // Add minimal but useful info
+    if (point.deviceName) {
+        itemContent += `<div class="pickup-device">${point.deviceName}</div>`;
+    }
+    
+    if (point.rfid_value && point.rfid_value !== '-') {
+        const shortRfid = point.rfid_value.length > 10 
+            ? point.rfid_value.substring(0, 6) + '...' 
+            : point.rfid_value;
+        itemContent += `<div class="pickup-rfid" title="${point.rfid_value}">${shortRfid}</div>`;
+    }
+    
+    if (point.NazivObjekta) {
+        itemContent += `<div class="pickup-location">${point.NazivObjekta}</div>`;
+    } else if (point.Ulica) {
+        const address = point.KucniBroj 
+            ? `${point.Ulica} ${point.KucniBroj}` 
+            : point.Ulica;
+        itemContent += `<div class="pickup-location">${address}</div>`;
+    }
+    
+    itemContent += `</div>`;
+    item.innerHTML = itemContent;
+    
+    // Add click event to center on map
+    item.addEventListener('click', () => {
+        if (window.map && marker) {
+            window.map.setView(marker.getLatLng(), 18);
+            marker.openPopup();
+            
+            // Highlight the selected item
+            document.querySelectorAll('.pickup-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            item.classList.add('selected');
+        }
+    });
+    
+    list.appendChild(item);
+}
+
+// Function to add styles for the pickup list
+function addPickupListStyles() {
+    if (!document.getElementById('pickupListStyles')) {
+        const style = document.createElement('style');
+        style.id = 'pickupListStyles';
+        style.innerHTML = `
+            .pickup-list-container {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 280px;
+                max-height: calc(100vh - 20px);
+                background: white;
+                border-radius: 4px;
+                box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .pickup-list-header {
+                padding: 8px 12px;
+                font-weight: bold;
+                background: #f8f8f8;
+                border-bottom: 1px solid #eee;
+                font-size: 14px;
+            }
+            
+            .pickup-list {
+                overflow-y: auto;
+                max-height: calc(100vh - 60px);
+                padding: 0;
+            }
+            
+            .pickup-item {
+                padding: 6px 10px;
+                border-bottom: 1px solid #eee;
+                font-size: 12px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+            }
+            
+            .pickup-item:hover {
+                background: #f5f5f5;
+            }
+            
+            .pickup-item.selected {
+                background: #e1f5fe;
+            }
+            
+            .pickup-item-color {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                margin-right: 8px;
+                flex-shrink: 0;
+            }
+            
+            .pickup-item-color.red {
+                background: #f44336;
+            }
+            
+            .pickup-item-color.yellow {
+                background: #ffc107;
+            }
+            
+            .pickup-item-color.green {
+                background: #4caf50;
+            }
+            
+            .pickup-item-time {
+                font-weight: bold;
+                margin-right: 8px;
+                width: 80px;
+                flex-shrink: 0;
+            }
+            
+            .pickup-item-info {
+                flex-grow: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            
+            .pickup-device, .pickup-rfid, .pickup-location {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            
+            @media (max-width: 768px) {
+                .pickup-list-container {
+                    position: fixed;
+                    top: auto;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    width: 100%;
+                    max-height: 200px;
+                }
+                
+                .pickup-list {
+                    max-height: 160px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 
