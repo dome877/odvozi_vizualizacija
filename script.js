@@ -669,6 +669,7 @@ function displayDataOnMap(data) {
             <strong>RFID:</strong> ${rfidValue}<br>
             <strong>Lokacija:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}
             ${point.VrstaObjekta ? `<br><strong>Vrsta objekta:</strong> ${point.VrstaObjekta}` : ''}
+            ${point.VrstaPosude ? `<br><strong>Vrsta posude:</strong> ${point.VrstaPosude}` : ''}
             ${point.SifraObjekta ? `<br><strong>Šifra objekta:</strong> ${point.SifraObjekta}` : ''}
             ${point.NazivObjekta ? `<br><strong>Naziv objekta:</strong> ${point.NazivObjekta}` : ''}
             ${point.Ulica ? `<br><strong>Ulica:</strong> ${point.Ulica}` : ''}
@@ -742,7 +743,7 @@ function addPointToList(point, index, iconColor, marker) {
     
     const date = new Date(point.dateTime);
     const timeStr = date.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateStr = date.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit' });
+    const dateStr = date.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     
     // Create list item
     const item = document.createElement('div');
