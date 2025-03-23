@@ -373,8 +373,6 @@ async function getJobResults(jobId) {
         throw new Error('Authentication required');
     }
 
-    console.log(`Retrieving results for job: ${jobId}`);
-
     const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/result`, {
         method: 'GET',
         headers: {
@@ -392,33 +390,7 @@ async function getJobResults(jobId) {
         throw new Error(`Failed to retrieve job results: ${errorText}`);
     }
 
-    const resultData = await response.json();
-    
-    // Enhanced logging of the API response
-    console.log('-------------------- API RESPONSE DATA --------------------');
-    console.log('Response structure:', {
-        type: typeof resultData,
-        isArray: Array.isArray(resultData),
-        hasRootProperty: resultData?.root !== undefined,
-        totalRecords: Array.isArray(resultData) ? resultData.length : (resultData?.root?.length || 0)
-    });
-    
-    // Log the first few records in detail
-    const dataArray = resultData.root || resultData;
-    if (Array.isArray(dataArray) && dataArray.length > 0) {
-        console.log('Sample records (first 3):');
-        for (let i = 0; i < Math.min(3, dataArray.length); i++) {
-            console.log(`Record ${i + 1}:`, dataArray[i]);
-        }
-        
-        // Log all available field names from the first record
-        if (dataArray.length > 0) {
-            console.log('Available fields in first record:', Object.keys(dataArray[0]));
-        }
-    }
-    console.log('----------------------------------------------------------');
-
-    return resultData;
+    return await response.json();
 }
 
 // Main function to handle the search process
@@ -553,6 +525,15 @@ async function searchVehicle() {
         
         const resultData = await getJobResults(jobId);
         
+        // Log data but don't display in result div
+        console.log('Raw response from server:', resultData);
+        console.log('Response type:', typeof resultData);
+        console.log('Response structure:', {
+            isArray: Array.isArray(resultData),
+            hasRoot: resultData?.root !== undefined,
+            length: Array.isArray(resultData) ? resultData.length : (resultData?.root?.length || 0)
+        });
+
         // Show success notification briefly
         showCentralNotification(true, 'Podaci uspješno dohvaćeni', false);
         
@@ -601,10 +582,9 @@ function displayDataOnMap(data) {
         createPickupListContainer();
     }
 
-    // Enhanced data logging
-    console.log('-------------------- DISPLAYING DATA --------------------');
+    // First, log the raw data for debugging
     console.log('Raw data received:', data);
-    
+
     // Ensure we have valid data
     if (!data || (!data.root && !Array.isArray(data))) {
         console.error('Invalid data structure received:', data);
@@ -614,20 +594,6 @@ function displayDataOnMap(data) {
 
     // Get the data array and filter out hand readers and invalid coordinates
     const dataArray = data.root || data;
-    
-    // Log data type distribution
-    const hasRfid = dataArray.filter(p => p.rfid_value && p.rfid_value !== '-').length;
-    const hasVrstaPosude = dataArray.filter(p => p.VrstaPosude).length;
-    const hasVrstaObjekta = dataArray.filter(p => p.VrstaObjekta).length;
-    const hasNazivObjekta = dataArray.filter(p => p.NazivObjekta).length;
-    
-    console.log('Data distribution:');
-    console.log(`- Total records: ${dataArray.length}`);
-    console.log(`- Records with RFID: ${hasRfid} (${Math.round(hasRfid/dataArray.length*100)}%)`);
-    console.log(`- Records with VrstaPosude: ${hasVrstaPosude} (${Math.round(hasVrstaPosude/dataArray.length*100)}%)`);
-    console.log(`- Records with VrstaObjekta: ${hasVrstaObjekta} (${Math.round(hasVrstaObjekta/dataArray.length*100)}%)`);
-    console.log(`- Records with NazivObjekta: ${hasNazivObjekta} (${Math.round(hasNazivObjekta/dataArray.length*100)}%)`);
-    
     const validPoints = dataArray.filter(point => {
         // Filter out hand readers and ensure valid coordinates
         return (
@@ -641,8 +607,7 @@ function displayDataOnMap(data) {
     });
 
     console.log(`Found ${validPoints.length} valid points out of ${dataArray.length} total records`);
-    console.log('--------------------------------------------------------');
-    
+
     if (validPoints.length === 0) {
         console.log('No valid points with coordinates found');
         alert('No valid location data found for the selected criteria');
@@ -659,18 +624,6 @@ function displayDataOnMap(data) {
     const sortedPoints = [...validPoints].sort((a, b) => {
         return new Date(b.dateTime) - new Date(a.dateTime);
     });
-
-    // Log a detailed sample of the first data point
-    if (sortedPoints.length > 0) {
-        console.log('-------------------- SAMPLE DATA POINT --------------------');
-        console.log('First data point (detailed):');
-        const sample = sortedPoints[0];
-        // Display all properties
-        for (const [key, value] of Object.entries(sample)) {
-            console.log(`${key}: ${value}`);
-        }
-        console.log('-----------------------------------------------------------');
-    }
 
     // Process valid points
     sortedPoints.forEach((point, index) => {
