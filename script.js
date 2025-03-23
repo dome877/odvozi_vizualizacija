@@ -749,36 +749,21 @@ function addPointToList(point, index, iconColor, marker) {
     item.className = 'pickup-item';
     item.setAttribute('data-index', index);
     
-    // Generate minimalistic display content
+    // Super minimalistic content - just color indicator and timestamp
     let itemContent = `
         <div class="pickup-item-color ${iconColor}"></div>
         <div class="pickup-item-time">${timeStr}, ${dateStr}</div>
-        <div class="pickup-item-info">
     `;
     
-    // Add minimal but useful info
-    if (point.deviceName) {
-        itemContent += `<div class="pickup-device">${point.deviceName}</div>`;
-    }
+    // Add tooltip with full info for hover
+    const tooltipContent = `
+        ${point.deviceName || 'Unknown vehicle'}<br>
+        ${point.rfid_value && point.rfid_value !== '-' ? point.rfid_value : 'No RFID'}<br>
+        ${point.NazivObjekta || point.Ulica || ''}
+    `;
     
-    if (point.rfid_value && point.rfid_value !== '-') {
-        const shortRfid = point.rfid_value.length > 10 
-            ? point.rfid_value.substring(0, 6) + '...' 
-            : point.rfid_value;
-        itemContent += `<div class="pickup-rfid" title="${point.rfid_value}">${shortRfid}</div>`;
-    }
-    
-    if (point.NazivObjekta) {
-        itemContent += `<div class="pickup-location">${point.NazivObjekta}</div>`;
-    } else if (point.Ulica) {
-        const address = point.KucniBroj 
-            ? `${point.Ulica} ${point.KucniBroj}` 
-            : point.Ulica;
-        itemContent += `<div class="pickup-location">${address}</div>`;
-    }
-    
-    itemContent += `</div>`;
     item.innerHTML = itemContent;
+    item.title = tooltipContent.replace(/<br>/g, ' - ').trim();
     
     // Add click event to center on map
     item.addEventListener('click', () => {
@@ -807,7 +792,7 @@ function addPickupListStyles() {
                 position: absolute;
                 top: 10px;
                 right: 10px;
-                width: 280px;
+                width: 180px;
                 max-height: calc(100vh - 20px);
                 background: white;
                 border-radius: 4px;
@@ -819,11 +804,12 @@ function addPickupListStyles() {
             }
             
             .pickup-list-header {
-                padding: 8px 12px;
+                padding: 6px 10px;
                 font-weight: bold;
                 background: #f8f8f8;
                 border-bottom: 1px solid #eee;
-                font-size: 14px;
+                font-size: 13px;
+                text-align: center;
             }
             
             .pickup-list {
@@ -833,9 +819,9 @@ function addPickupListStyles() {
             }
             
             .pickup-item {
-                padding: 6px 10px;
+                padding: 4px 8px;
                 border-bottom: 1px solid #eee;
-                font-size: 12px;
+                font-size: 11px;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
@@ -850,10 +836,10 @@ function addPickupListStyles() {
             }
             
             .pickup-item-color {
-                width: 8px;
-                height: 8px;
+                width: 6px;
+                height: 6px;
                 border-radius: 50%;
-                margin-right: 8px;
+                margin-right: 6px;
                 flex-shrink: 0;
             }
             
@@ -871,19 +857,8 @@ function addPickupListStyles() {
             
             .pickup-item-time {
                 font-weight: bold;
-                margin-right: 8px;
-                width: 80px;
-                flex-shrink: 0;
-            }
-            
-            .pickup-item-info {
-                flex-grow: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            
-            .pickup-device, .pickup-rfid, .pickup-location {
+                width: 100%;
+                text-align: left;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -897,11 +872,11 @@ function addPickupListStyles() {
                     left: 0;
                     right: 0;
                     width: 100%;
-                    max-height: 200px;
+                    max-height: 150px;
                 }
                 
                 .pickup-list {
-                    max-height: 160px;
+                    max-height: 120px;
                 }
             }
         `;
