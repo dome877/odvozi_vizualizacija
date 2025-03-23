@@ -652,7 +652,7 @@ function displayDataOnMap(data) {
     // Set total count in list header
     const listHeader = document.getElementById('pickupListHeader');
     if (listHeader) {
-        listHeader.textContent = `Locations (${validPoints.length})`;
+        listHeader.textContent = `Odvozi (${validPoints.length})`;
     }
 
     // Sort points by dateTime (newest first)
