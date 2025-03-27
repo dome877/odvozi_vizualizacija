@@ -53,7 +53,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const statusSpan = document.getElementById('status');
     const timestampSpan = document.getElementById('timestamp');
     const tokenInfo = document.getElementById('tokenInfo');
-    
+    const convertBtn = document.getElementById('convertBtn');
+    const hexInput = document.getElementById('hexInput');
+    const decimalOutput = document.getElementById('decimalOutput');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+
     // Initialize authentication (async)
     const isAuthenticated = await window.Auth.initAuth();
     
@@ -64,226 +68,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Add event listeners for auth-related actions
         logoutBtn.addEventListener('click', window.Auth.logout);
         clearBtn.addEventListener('click', clearResults);
-        
+
         // Add event listener for vehicle search (moved from inline HTML)
         fetchBtn.addEventListener('click', searchVehicle);
         
-        // Show token info (just the expiry time for security)
-        displayTokenInfo();
-        
-        // Initialize map and app functionality
-        initializeApp();
-    }
-    
-    // Function to show basic token information
-    function displayTokenInfo() {
-        try {
-            const idToken = window.Auth.getIdToken();
-            if (idToken) {
-                // Parse the JWT token
-                const tokenParts = idToken.split('.');
-                if (tokenParts.length === 3) {
-                    const payload = JSON.parse(atob(tokenParts[1]));
-                    const expiry = new Date(payload.exp * 1000);
-                    
-                    const options = { 
-                        day: '2-digit', 
-                        month: '2-digit', 
-                        year: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    };
-                    
-                    if (tokenInfo) {
-                        tokenInfo.innerHTML = `
-                            <p>Prijavljeni korisnik: <strong>${payload.email || payload['cognito:username'] || 'Korisnik'}</strong></p>
-                            <p>Token ističe: <strong>${expiry.toLocaleDateString('hr-HR', options)}</strong></p>
-                        `;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error parsing token:', error);
-        }
-    }
-    
-    // Function to clear results
-    function clearResults() {
-        statusSpan.textContent = 'Spremno';
-        
-        // Clear map markers
-        if (window.markersLayer) {
-            window.markersLayer.clearLayers();
-        }
-        
-        // Clear drawn box
-        if (window.drawnItems) {
-            window.drawnItems.clearLayers();
-            window.drawnBounds = null;
-        }
-        
-        // Clear box info display
-        const boxInfo = document.getElementById('boxInfo');
-        if (boxInfo) {
-            boxInfo.style.display = 'none';
-            boxInfo.innerHTML = '';
-        }
-    }
-    
-    // Initialize the app functionality
-    function initializeApp() {
-        // Initialize the map - add a delay to ensure DOM is ready
-        setTimeout(() => {
-            const map = L.map('map').setView([43.7350, 15.8952], 13);
-
-            // Add Google Satellite layer
-            L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-                minZoom: 10,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: '© Google'
-            }).addTo(map);
-            
-            // Initialize a layer group to store markers
-            window.markersLayer = L.layerGroup().addTo(map);
-            
-            // Initialize a layer for drawn items
-            window.drawnItems = new L.FeatureGroup();
-            map.addLayer(window.drawnItems);
-            
-            // Initialize the draw control and add it to the map
-            const drawControl = new L.Control.Draw({
-                draw: {
-                    polyline: false,
-                    polygon: false,
-                    circle: false,
-                    circlemarker: false,
-                    marker: false,
-                    rectangle: {
-                        shapeOptions: {
-                            color: '#3388ff',
-                            weight: 2
-                        }
-                    }
-                },
-                edit: {
-                    featureGroup: window.drawnItems,
-                    remove: true
-                }
-            });
-            map.addControl(drawControl);
-            
-            // Event handler for newly drawn items
-            map.on(L.Draw.Event.CREATED, function (e) {
-                // Clear previous drawings
-                window.drawnItems.clearLayers();
-                
-                // Add the newly drawn layer
-                const layer = e.layer;
-                window.drawnItems.addLayer(layer);
-                
-                // Store the bounds for later use in search
-                if (e.layerType === 'rectangle') {
-                    const bounds = layer.getBounds();
-                    window.drawnBounds = bounds;
-                    
-                    // Show info about the drawn box
-                    const boxInfo = document.getElementById('boxInfo');
-                    if (boxInfo) {
-                        boxInfo.innerHTML = `
-                            Box coordinates:<br>
-                            NE: ${bounds.getNorthEast().lat.toFixed(7)}, ${bounds.getNorthEast().lng.toFixed(7)}<br>
-                            SW: ${bounds.getSouthWest().lat.toFixed(7)}, ${bounds.getSouthWest().lng.toFixed(7)}
-                        `;
-                        boxInfo.style.display = 'block';
-                    }
-                }
-            });
-            
-            // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
-            setTimeout(() => {
-                map.invalidateSize();
-                console.log('Map size invalidated');
-            }, 200);
-            
-            // Store map in window object for later access
-            window.map = map;
-            
-            // Add window resize handler to ensure the map renders correctly
-            window.addEventListener('resize', function() {
-                if (window.map) {
-                    window.map.invalidateSize();
-                }
-            });
-        }, 100);
-
-        // Make sure the Croatian locale is available or use default
-        let locale = "default";
-        try {
-            // Check if Croatian locale is available
-            if (flatpickr.l10ns && flatpickr.l10ns.hr) {
-                console.log("Croatian locale loaded successfully");
-                locale = "hr";
-                // Ensure the confirmDate text is properly set in Croatian
-                if (typeof confirmDatePlugin !== 'undefined') {
-                    flatpickr.l10ns.hr.confirmDatePlugin = {
-                        confirmText: "U redu",
-                        showAlways: true
-                    };
-                }
-            } else {
-                console.warn("Croatian locale not available, using default");
-            }
-        } catch (error) {
-            console.warn("Error checking locale:", error);
-        }
-
-        // Initialize date pickers with ISO string format
-        flatpickr("#dateFrom", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i:00",
-            time_24hr: true,
-            defaultHour: 0,
-            defaultMinute: 0,
-            locale: locale !== "default" ? locale : undefined,
-            plugins: [
-                new confirmDatePlugin({
-                    confirmText: "U redu",
-                    confirmIcon: "",
-                    showAlways: true,
-                    theme: "light"
-                })
-            ]
-        });
-
-        flatpickr("#dateTo", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i:00",
-            time_24hr: true,
-            defaultHour: 23,
-            defaultMinute: 59,
-            locale: locale !== "default" ? locale : undefined,
-            plugins: [
-                new confirmDatePlugin({
-                    confirmText: "U redu",
-                    confirmIcon: "",
-                    showAlways: true,
-                    theme: "light"
-                })
-            ]
-        });
-
-        // Set up hex-to-decimal converter
-        const convertBtn = document.getElementById('convertBtn');
-        const hexInput = document.getElementById('hexInput');
-        const decimalOutput = document.getElementById('decimalOutput');
-        
+        // Initialize hex-to-decimal converter
         if (convertBtn && hexInput && decimalOutput) {
             convertBtn.addEventListener('click', function() {
                 decimalOutput.value = hexToDecimal(hexInput.value);
             });
             
-            // Also convert on Enter key press
+            // Also convert on enter key in the input
             hexInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     decimalOutput.value = hexToDecimal(hexInput.value);
@@ -291,14 +86,224 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Initialize collapsible sections
-        // Default state: converter collapsed (uncomment to start collapsed)
-        // toggleConverter();
+        // Initialize export button
+        if (exportCsvBtn) {
+            exportCsvBtn.addEventListener('click', exportToCsv);
+        }
         
-        // Update timestamp
-        updateTimestamp();
+        // Show token info (just the expiry time for security)
+        displayTokenInfo();
+        
+        // Initialize map and app functionality
+        initializeApp();
     }
 });
+
+// Function to show basic token information
+function displayTokenInfo() {
+    try {
+        const idToken = window.Auth.getIdToken();
+        if (idToken) {
+            // Parse the JWT token
+            const tokenParts = idToken.split('.');
+            if (tokenParts.length === 3) {
+                const payload = JSON.parse(atob(tokenParts[1]));
+                const expiry = new Date(payload.exp * 1000);
+                
+                const options = { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                };
+                
+                if (tokenInfo) {
+                    tokenInfo.innerHTML = `
+                        <p>Prijavljeni korisnik: <strong>${payload.email || payload['cognito:username'] || 'Korisnik'}</strong></p>
+                        <p>Token ističe: <strong>${expiry.toLocaleDateString('hr-HR', options)}</strong></p>
+                    `;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error parsing token:', error);
+    }
+}
+
+// Function to clear results
+function clearResults() {
+    statusSpan.textContent = 'Spremno';
+    
+    // Clear map markers
+    if (window.markersLayer) {
+        window.markersLayer.clearLayers();
+    }
+    
+    // Clear drawn box
+    if (window.drawnItems) {
+        window.drawnItems.clearLayers();
+        window.drawnBounds = null;
+    }
+    
+    // Clear box info display
+    const boxInfo = document.getElementById('boxInfo');
+    if (boxInfo) {
+        boxInfo.style.display = 'none';
+        boxInfo.innerHTML = '';
+    }
+}
+
+// Initialize the app functionality
+function initializeApp() {
+    // Initialize the map - add a delay to ensure DOM is ready
+    setTimeout(() => {
+        const map = L.map('map').setView([43.7350, 15.8952], 13);
+
+        // Add Google Satellite layer
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            minZoom: 10,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google'
+        }).addTo(map);
+        
+        // Initialize a layer group to store markers
+        window.markersLayer = L.layerGroup().addTo(map);
+        
+        // Initialize a layer for drawn items
+        window.drawnItems = new L.FeatureGroup();
+        map.addLayer(window.drawnItems);
+        
+        // Initialize the draw control and add it to the map
+        const drawControl = new L.Control.Draw({
+            draw: {
+                polyline: false,
+                polygon: false,
+                circle: false,
+                circlemarker: false,
+                marker: false,
+                rectangle: {
+                    shapeOptions: {
+                        color: '#3388ff',
+                        weight: 2
+                    }
+                }
+            },
+            edit: {
+                featureGroup: window.drawnItems,
+                remove: true
+            }
+        });
+        map.addControl(drawControl);
+        
+        // Event handler for newly drawn items
+        map.on(L.Draw.Event.CREATED, function (e) {
+            // Clear previous drawings
+            window.drawnItems.clearLayers();
+            
+            // Add the newly drawn layer
+            const layer = e.layer;
+            window.drawnItems.addLayer(layer);
+            
+            // Store the bounds for later use in search
+            if (e.layerType === 'rectangle') {
+                const bounds = layer.getBounds();
+                window.drawnBounds = bounds;
+                
+                // Show info about the drawn box
+                const boxInfo = document.getElementById('boxInfo');
+                if (boxInfo) {
+                    boxInfo.innerHTML = `
+                        Box coordinates:<br>
+                        NE: ${bounds.getNorthEast().lat.toFixed(7)}, ${bounds.getNorthEast().lng.toFixed(7)}<br>
+                        SW: ${bounds.getSouthWest().lat.toFixed(7)}, ${bounds.getSouthWest().lng.toFixed(7)}
+                    `;
+                    boxInfo.style.display = 'block';
+                }
+            }
+        });
+        
+        // Fix map rendering - invalidate size after a slight delay to ensure DOM is fully rendered
+        setTimeout(() => {
+            map.invalidateSize();
+            console.log('Map size invalidated');
+        }, 200);
+        
+        // Store map in window object for later access
+        window.map = map;
+        
+        // Add window resize handler to ensure the map renders correctly
+        window.addEventListener('resize', function() {
+            if (window.map) {
+                window.map.invalidateSize();
+            }
+        });
+    }, 100);
+
+    // Make sure the Croatian locale is available or use default
+    let locale = "default";
+    try {
+        // Check if Croatian locale is available
+        if (flatpickr.l10ns && flatpickr.l10ns.hr) {
+            console.log("Croatian locale loaded successfully");
+            locale = "hr";
+            // Ensure the confirmDate text is properly set in Croatian
+            if (typeof confirmDatePlugin !== 'undefined') {
+                flatpickr.l10ns.hr.confirmDatePlugin = {
+                    confirmText: "U redu",
+                    showAlways: true
+                };
+            }
+        } else {
+            console.warn("Croatian locale not available, using default");
+        }
+    } catch (error) {
+        console.warn("Error checking locale:", error);
+    }
+
+    // Initialize date pickers with ISO string format
+    flatpickr("#dateFrom", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i:00",
+        time_24hr: true,
+        defaultHour: 0,
+        defaultMinute: 0,
+        locale: locale !== "default" ? locale : undefined,
+        plugins: [
+            new confirmDatePlugin({
+                confirmText: "U redu",
+                confirmIcon: "",
+                showAlways: true,
+                theme: "light"
+            })
+        ]
+    });
+
+    flatpickr("#dateTo", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i:00",
+        time_24hr: true,
+        defaultHour: 23,
+        defaultMinute: 59,
+        locale: locale !== "default" ? locale : undefined,
+        plugins: [
+            new confirmDatePlugin({
+                confirmText: "U redu",
+                confirmIcon: "",
+                showAlways: true,
+                theme: "light"
+            })
+        ]
+    });
+
+    // Initialize collapsible sections
+    // Default state: converter collapsed (uncomment to start collapsed)
+    // toggleConverter();
+    
+    // Update timestamp
+    updateTimestamp();
+}
 
 // Function to update Asset ID based on vehicle selection
 function updateAssetId() {
@@ -606,6 +611,9 @@ function displayDataOnMap(data) {
         );
     });
 
+    // Store the valid points in a global variable for export
+    window.markersLayerData = validPoints;
+
     console.log(`Found ${validPoints.length} valid points out of ${dataArray.length} total records`);
 
     if (validPoints.length === 0) {
@@ -895,4 +903,65 @@ function decimalToHex(decimalString) {
     if (!decimalString || isNaN(parseInt(decimalString))) return '';
     const hex = parseInt(decimalString).toString(16).toUpperCase();
     return hex.padStart(hex.length + (hex.length % 2), '0');
+}
+
+// Function to export data to CSV
+function exportToCsv() {
+    // Get the data from the pickup list
+    const data = [];
+    const validPoints = window.markersLayerData || [];
+    
+    if (!validPoints || validPoints.length === 0) {
+        alert('No data available to export.');
+        return;
+    }
+    
+    // Prepare CSV header
+    const headers = [
+        'Vrijeme', 'Vozilo', 'RFID', 'Latitude', 'Longitude', 
+        'Vrsta objekta', 'Vrsta posude', 'Šifra objekta', 
+        'Naziv objekta', 'Ulica', 'Kućni broj', 
+        'Datum aktivacije', 'Zajednička posuda'
+    ];
+    
+    // Add header row
+    data.push(headers.join(','));
+    
+    // Add data rows
+    validPoints.forEach(point => {
+        const row = [
+            point.dateTime || '',
+            (point.deviceName || 'Unknown vehicle').replace(/,/g, ';'),
+            (point.rfid_value || 'No RFID').replace(/,/g, ';'),
+            point.latitude || '',
+            point.longitude || '',
+            (point.VrstaObjekta || '').replace(/,/g, ';'),
+            (point.VrstaPosude || '').replace(/,/g, ';'),
+            (point.SifraObjekta || '').replace(/,/g, ';'),
+            (point.NazivObjekta || '').replace(/,/g, ';'),
+            (point.Ulica || '').replace(/,/g, ';'),
+            (point.KucniBroj || '').replace(/,/g, ';'),
+            (point.DatumAktivacije || '').replace(/,/g, ';'),
+            (point.ZajednickaPostuda || '').replace(/,/g, ';')
+        ];
+        
+        data.push(row.join(','));
+    });
+    
+    // Create CSV file
+    const csvContent = data.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create download link
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `odvozi-podaci-${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    
+    // Append to the document, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
