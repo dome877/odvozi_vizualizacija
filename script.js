@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const tokenInfo = document.getElementById('tokenInfo');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
     const rfidPolygonFilterCheckbox = document.getElementById('useRfidPolygonFilter');
+    const showPolygonsCheckbox = document.getElementById('showPolygons');
 
     // Initialize authentication (async)
     const isAuthenticated = await window.Auth.initAuth();
@@ -82,6 +83,13 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (window.markersLayerData && window.lastFetchedData) {
                     displayDataOnMap(window.lastFetchedData);
                 }
+            });
+        }
+        
+        // Add event listener for polygon visibility toggle
+        if (showPolygonsCheckbox) {
+            showPolygonsCheckbox.addEventListener('change', function() {
+                updatePolygonVisibility();
             });
         }
         
@@ -1050,7 +1058,7 @@ function loadGeoJsonPolygons(map) {
         .then(data => {
             // Process the GeoJSON data
             if (data && data.features) {
-                // Add each feature to the map
+                // Add each feature to the map but initially don't show them
                 window.geoJsonLayer = L.geoJSON(data, {
                     style: {
                         color: '#3388ff',
@@ -1074,7 +1082,10 @@ function loadGeoJsonPolygons(map) {
                             layer.bindPopup(`<strong>Vozilo:</strong> ${vehicleName}`);
                         }
                     }
-                }).addTo(map);
+                });
+                
+                // Initially don't show the polygons on the map
+                updatePolygonVisibility();
                 
                 console.log('Loaded GeoJSON polygons:', Object.keys(window.vehiclePolygons));
             }
@@ -1084,25 +1095,69 @@ function loadGeoJsonPolygons(map) {
         });
 }
 
-// Function to check if a point is inside a polygon
-function isPointInPolygon(latLng, polygon) {
-    // For GeoJSON polygons stored by Leaflet
-    if (polygon.feature && polygon.feature.geometry.type === 'Polygon') {
-        try {
-            return polygon.contains(latLng);
-        } catch (error) {
-            console.error('Error checking if point is in polygon:', error);
-            return false;
+// Function to update polygon visibility based on checkbox
+function updatePolygonVisibility() {
+    const showPolygons = document.getElementById('showPolygons')?.checked || false;
+    
+    if (window.geoJsonLayer && window.map) {
+        if (showPolygons) {
+            if (!window.map.hasLayer(window.geoJsonLayer)) {
+                window.geoJsonLayer.addTo(window.map);
+            }
+        } else {
+            if (window.map.hasLayer(window.geoJsonLayer)) {
+                window.map.removeLayer(window.geoJsonLayer);
+            }
         }
     }
-    
-    // For circles (which might also be in the GeoJSON)
-    if (polygon.getRadius) {
-        const center = polygon.getLatLng();
-        const radius = polygon.getRadius();
-        const distance = center.distanceTo(latLng);
-        return distance <= radius;
+}
+
+// Function to check if a point is inside a polygon
+function isPointInPolygon(latLng, polygon) {
+    try {
+        // For GeoJSON polygons stored by Leaflet
+        if (polygon.feature && polygon.feature.geometry.type === 'Polygon') {
+            // Get coordinates from the polygon feature
+            const coords = polygon.feature.geometry.coordinates[0];
+            
+            // Check if point is in polygon using ray casting algorithm
+            // Note: Leaflet uses [lat, lng] but GeoJSON uses [lng, lat]
+            return isPointInPolygonCoords(latLng.lat, latLng.lng, coords);
+        }
+        
+        // For circles (which might also be in the GeoJSON)
+        if (polygon.getRadius) {
+            const center = polygon.getLatLng();
+            const radius = polygon.getRadius();
+            const distance = center.distanceTo(latLng);
+            return distance <= radius;
+        }
+    } catch (error) {
+        console.error('Error checking if point is in polygon:', error);
     }
     
     return false;
+}
+
+// Ray casting algorithm to determine if a point is in a polygon
+// GeoJSON coordinates are in [longitude, latitude] format
+function isPointInPolygonCoords(lat, lng, coords) {
+    let inside = false;
+    for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+        // NOTE: GeoJSON coordinates are [longitude, latitude]
+        const xi = coords[i][0];  // longitude
+        const yi = coords[i][1];  // latitude
+        const xj = coords[j][0];  // longitude
+        const yj = coords[j][1];  // latitude
+        
+        // Check if point crosses polygon edge
+        const intersect = ((yi > lat) !== (yj > lat)) && 
+            (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+            
+        if (intersect) {
+            inside = !inside;
+        }
+    }
+    
+    return inside;
 }
