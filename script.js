@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const timestampSpan = document.getElementById('timestamp');
     const tokenInfo = document.getElementById('tokenInfo');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const rfidPolygonFilterCheckbox = document.getElementById('useRfidPolygonFilter');
 
     // Initialize authentication (async)
     const isAuthenticated = await window.Auth.initAuth();
@@ -72,6 +73,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize export button
         if (exportCsvBtn) {
             exportCsvBtn.addEventListener('click', exportToCsv);
+        }
+        
+        // Add event listener for RFID-Polygon filter toggle
+        if (rfidPolygonFilterCheckbox) {
+            rfidPolygonFilterCheckbox.addEventListener('change', function() {
+                // If we have data loaded, reapply the filter
+                if (window.markersLayerData && window.lastFetchedData) {
+                    displayDataOnMap(window.lastFetchedData);
+                }
+            });
         }
         
         // Show token info (just the expiry time for security)
@@ -157,6 +168,12 @@ function initializeApp() {
         // Initialize a layer for drawn items
         window.drawnItems = new L.FeatureGroup();
         map.addLayer(window.drawnItems);
+        
+        // Initialize a layer for the GeoJSON polygons
+        window.geoJsonLayer = L.geoJSON().addTo(map);
+        
+        // Load GeoJSON file
+        loadGeoJsonPolygons(map);
         
         // Initialize the draw control and add it to the map
         const drawControl = new L.Control.Draw({
@@ -547,6 +564,9 @@ async function searchVehicle() {
             length: Array.isArray(resultData) ? resultData.length : (resultData?.root?.length || 0)
         });
 
+        // Store the fetched data for potential refiltering
+        window.lastFetchedData = resultData;
+
         // Show success notification briefly
         showCentralNotification(true, 'Podaci uspješno dohvaćeni', false);
         
@@ -619,9 +639,6 @@ function displayDataOnMap(data) {
         );
     });
 
-    // Store the valid points in a global variable for export
-    window.markersLayerData = validPoints;
-
     console.log(`Found ${validPoints.length} valid points out of ${dataArray.length} total records`);
 
     if (validPoints.length === 0) {
@@ -630,18 +647,61 @@ function displayDataOnMap(data) {
         return;
     }
 
+    // Filter out red pickups inside corresponding vehicle polygons
+    const filteredPoints = validPoints.filter(point => {
+        const lat = parseFloat(point.latitude);
+        const lng = parseFloat(point.longitude);
+        const vehicleName = point.deviceName || '';
+        const hasValidRfid = point.rfid_value && point.rfid_value !== '-';
+        
+        // Keep points with valid RFID
+        if (hasValidRfid) {
+            return true;
+        }
+        
+        // Check if the filter is enabled
+        const useRfidPolygonFilter = document.getElementById('useRfidPolygonFilter')?.checked || false;
+        if (!useRfidPolygonFilter) {
+            return true; // Keep all points if filter is disabled
+        }
+        
+        // If it's a red marker (no valid RFID), check if it's inside a polygon
+        // for the same vehicle and filter it out if so
+        if (window.vehiclePolygons && window.vehiclePolygons[vehicleName]) {
+            const polygons = window.vehiclePolygons[vehicleName];
+            const latLng = L.latLng(lat, lng);
+            
+            // Check if the point is inside any polygon for this vehicle
+            for (const polygon of polygons) {
+                if (isPointInPolygon(latLng, polygon)) {
+                    console.log(`Filtered out pickup without RFID for ${vehicleName} at [${lat}, ${lng}]`);
+                    return false;
+                }
+            }
+        }
+        
+        // Keep the point if it's not inside a polygon
+        return true;
+    });
+    
+    // Log the filtering results
+    console.log(`Filtered out ${validPoints.length - filteredPoints.length} red pickups inside vehicle polygons`);
+    
+    // Store the filtered points in a global variable for export
+    window.markersLayerData = filteredPoints;
+
     // Set total count in list header
     const listHeader = document.getElementById('pickupListHeader');
     if (listHeader) {
-        listHeader.textContent = `Odvozi (${validPoints.length})`;
+        listHeader.textContent = `Odvozi (${filteredPoints.length})`;
     }
 
     // Sort points by dateTime (newest first)
-    const sortedPoints = [...validPoints].sort((a, b) => {
+    const sortedPoints = [...filteredPoints].sort((a, b) => {
         return new Date(b.dateTime) - new Date(a.dateTime);
     });
 
-    // Process valid points
+    // Process filtered points
     sortedPoints.forEach((point, index) => {
         const lat = parseFloat(point.latitude);
         const lng = parseFloat(point.longitude);
@@ -705,8 +765,8 @@ function displayDataOnMap(data) {
 
     // Draw route line if RFID filter is active
     const rfidInput = document.getElementById('rfidInput').value.trim();
-    if (rfidInput && validPoints.length > 1) {
-        const routePoints = validPoints.map(point => [
+    if (rfidInput && filteredPoints.length > 1) {
+        const routePoints = filteredPoints.map(point => [
             parseFloat(point.latitude), 
             parseFloat(point.longitude)
         ]);
@@ -972,4 +1032,77 @@ function exportToCsv() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// Function to load GeoJSON polygons
+function loadGeoJsonPolygons(map) {
+    // Store vehicle polygons for filtering
+    window.vehiclePolygons = {};
+    
+    // Fetch the GeoJSON file
+    fetch('map.geojson')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load GeoJSON file');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Process the GeoJSON data
+            if (data && data.features) {
+                // Add each feature to the map
+                window.geoJsonLayer = L.geoJSON(data, {
+                    style: {
+                        color: '#3388ff',
+                        weight: 2,
+                        fillOpacity: 0.1,
+                        fillColor: '#3388ff'
+                    },
+                    onEachFeature: (feature, layer) => {
+                        // Store the polygon by vehicle name for filtering
+                        if (feature.properties && feature.properties.Vozilo) {
+                            const vehicleName = feature.properties.Vozilo;
+                            
+                            // Store the layer for later use
+                            if (!window.vehiclePolygons[vehicleName]) {
+                                window.vehiclePolygons[vehicleName] = [];
+                            }
+                            
+                            window.vehiclePolygons[vehicleName].push(layer);
+                            
+                            // Add a popup to show the vehicle name
+                            layer.bindPopup(`<strong>Vozilo:</strong> ${vehicleName}`);
+                        }
+                    }
+                }).addTo(map);
+                
+                console.log('Loaded GeoJSON polygons:', Object.keys(window.vehiclePolygons));
+            }
+        })
+        .catch(error => {
+            console.error('Error loading GeoJSON file:', error);
+        });
+}
+
+// Function to check if a point is inside a polygon
+function isPointInPolygon(latLng, polygon) {
+    // For GeoJSON polygons stored by Leaflet
+    if (polygon.feature && polygon.feature.geometry.type === 'Polygon') {
+        try {
+            return polygon.contains(latLng);
+        } catch (error) {
+            console.error('Error checking if point is in polygon:', error);
+            return false;
+        }
+    }
+    
+    // For circles (which might also be in the GeoJSON)
+    if (polygon.getRadius) {
+        const center = polygon.getLatLng();
+        const radius = polygon.getRadius();
+        const distance = center.distanceTo(latLng);
+        return distance <= radius;
+    }
+    
+    return false;
 }
