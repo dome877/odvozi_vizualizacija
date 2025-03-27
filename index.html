@@ -76,32 +76,37 @@
                     <input type="hidden" id="assetId" readonly>
                 </div>
 
-                <!-- Box filter option -->
-                <div class="input-group box-filter">
-                    <label for="useBoxFilter">
-                        <input type="checkbox" id="useBoxFilter" />
-                        Filtriraj po području
-                    </label>
-                    <div id="boxInfo" style="display:none; margin-top: 5px; font-size: 0.8em; color: #666;"></div>
-                    <div class="box-instructions">Nacrtajte pravokutnik na karti za filtriranje po području</div>
-                </div>
+                <!-- Filter Options Section -->
+                <div class="filter-options">
+                    <div class="filter-section-title">Dodatne opcije:</div>
+                    
+                    <!-- Box filter option -->
+                    <div class="filter-option">
+                        <label for="useBoxFilter">
+                            <input type="checkbox" id="useBoxFilter" />
+                            Filtriraj po području
+                        </label>
+                        <div id="boxInfo" style="display:none; margin-top: 5px; font-size: 0.8em; color: #666;"></div>
+                        <div class="filter-description">Zahtijeva nacrtani pravokutnik na karti</div>
+                    </div>
 
-                <!-- RFID-Polygon Filter option -->
-                <div class="input-group box-filter">
-                    <label for="useRfidPolygonFilter">
-                        <input type="checkbox" id="useRfidPolygonFilter" checked />
-                        Filtriraj crvene oznake unutar poligona
-                    </label>
-                    <div class="box-instructions">Filtrira crvene oznake bez RFID-a unutar poligona za isto vozilo</div>
-                </div>
-                
-                <!-- Polygon visibility toggle -->
-                <div class="input-group box-filter">
-                    <label for="showPolygons">
-                        <input type="checkbox" id="showPolygons" />
-                        Prikaži poligone na karti
-                    </label>
-                    <div class="box-instructions">Uključite za prikaz poligona vozila</div>
+                    <!-- RFID-Polygon Filter option -->
+                    <div class="filter-option">
+                        <label for="useRfidPolygonFilter">
+                            <input type="checkbox" id="useRfidPolygonFilter" checked />
+                            Filtriraj crvene oznake
+                        </label>
+                        <div class="filter-description">Uklanja oznake bez RFID-a u poligonima</div>
+                    </div>
+                    
+                    <!-- Polygon visibility toggle -->
+                    <div class="filter-option">
+                        <label for="showPolygons">
+                            <input type="checkbox" id="showPolygons" />
+                            Prikaži poligone
+                        </label>
+                        <div class="filter-description">Prikazuje poligone vozila na karti</div>
+                    </div>
                 </div>
 
                 <!-- Action buttons -->

@@ -77,6 +77,7 @@ html, body {
     gap: 0;
     margin-bottom: 0;
     padding: 15px;
+    padding-bottom: 8px;
 }
 
 /* Converter container */
@@ -492,4 +493,74 @@ button:active {
     fill-opacity: 0.25;
     stroke-width: 3px;
     stroke-opacity: 0.8;
+}
+
+/* Filter checkboxes styling */
+.filter-options {
+    margin: 6px 0 10px;
+    padding: 0;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 6px;
+}
+
+.filter-option {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 6px;
+    position: relative;
+    padding-bottom: 4px;
+}
+
+.filter-option:not(:last-child) {
+    border-bottom: 1px dashed #f0f0f0;
+}
+
+.filter-option label {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.filter-option input[type="checkbox"] {
+    margin-right: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.filter-option .filter-description {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+    margin-left: 20px;
+    margin-bottom: 2px;
+    line-height: 1.2;
+    max-width: 95%;
+}
+
+/* Make the box-filter less spacious */
+.input-group.box-filter {
+    margin-bottom: 5px;
+}
+
+.box-instructions {
+    font-size: 10px;
+    color: #666;
+    margin-top: 1px;
+    margin-left: 20px;
+    line-height: 1.2;
+}
+
+.filter-section-title {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
