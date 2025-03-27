@@ -896,3 +896,92 @@ function decimalToHex(decimalString) {
     const hex = parseInt(decimalString).toString(16).toUpperCase();
     return hex.padStart(hex.length + (hex.length % 2), '0');
 }
+
+// Function to export data to CSV
+function exportToCSV() {
+    // Get the current data from the map markers
+    if (!window.markersLayer || !window.markersLayer.getLayers().length) {
+        alert('Nema podataka za izvoz');
+        return;
+    }
+
+    // Get all markers and their popup content
+    const markers = window.markersLayer.getLayers();
+    const csvRows = [];
+    
+    // Add CSV header
+    csvRows.push([
+        'Vrijeme',
+        'Vozilo',
+        'RFID',
+        'Lokacija',
+        'Vrsta objekta',
+        'Vrsta posude',
+        'Šifra objekta',
+        'Naziv objekta',
+        'Ulica',
+        'Kućni broj',
+        'Datum aktivacije',
+        'Zajednička posuda'
+    ].join(','));
+
+    // Add data rows
+    markers.forEach(marker => {
+        const popupContent = marker.getPopup().getContent();
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = popupContent;
+        
+        // Extract data from popup content
+        const time = contentDiv.querySelector('strong:contains("Vrijeme:")')?.nextSibling?.textContent?.trim() || '';
+        const vehicle = contentDiv.querySelector('strong:contains("Vozilo:")')?.nextSibling?.textContent?.trim() || '';
+        const rfid = contentDiv.querySelector('strong:contains("RFID:")')?.nextSibling?.textContent?.trim() || '';
+        const location = contentDiv.querySelector('strong:contains("Lokacija:")')?.nextSibling?.textContent?.trim() || '';
+        const vrstaObjekta = contentDiv.querySelector('strong:contains("Vrsta objekta:")')?.nextSibling?.textContent?.trim() || '';
+        const vrstaPosude = contentDiv.querySelector('strong:contains("Vrsta posude:")')?.nextSibling?.textContent?.trim() || '';
+        const sifraObjekta = contentDiv.querySelector('strong:contains("Šifra objekta:")')?.nextSibling?.textContent?.trim() || '';
+        const nazivObjekta = contentDiv.querySelector('strong:contains("Naziv objekta:")')?.nextSibling?.textContent?.trim() || '';
+        const ulica = contentDiv.querySelector('strong:contains("Ulica:")')?.nextSibling?.textContent?.trim() || '';
+        const kucniBroj = contentDiv.querySelector('strong:contains("Kućni broj:")')?.nextSibling?.textContent?.trim() || '';
+        const datumAktivacije = contentDiv.querySelector('strong:contains("Datum aktivacije:")')?.nextSibling?.textContent?.trim() || '';
+        const zajednickaPostuda = contentDiv.querySelector('strong:contains("Zajednička posuda:")')?.nextSibling?.textContent?.trim() || '';
+
+        // Escape and format values for CSV
+        const row = [
+            time,
+            vehicle,
+            rfid,
+            location,
+            vrstaObjekta,
+            vrstaPosude,
+            sifraObjekta,
+            nazivObjekta,
+            ulica,
+            kucniBroj,
+            datumAktivacije,
+            zajednickaPostuda
+        ].map(value => {
+            // Escape commas and quotes, wrap in quotes if contains special characters
+            const escaped = String(value).replace(/"/g, '""');
+            return /[",\n]/.test(value) ? `"${escaped}"` : escaped;
+        });
+
+        csvRows.push(row.join(','));
+    });
+
+    // Create and download the CSV file
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Generate filename with current date
+    const now = new Date();
+    const filename = `odvozi_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
