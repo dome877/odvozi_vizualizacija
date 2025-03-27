@@ -53,9 +53,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const statusSpan = document.getElementById('status');
     const timestampSpan = document.getElementById('timestamp');
     const tokenInfo = document.getElementById('tokenInfo');
-    const convertBtn = document.getElementById('convertBtn');
-    const hexInput = document.getElementById('hexInput');
-    const decimalOutput = document.getElementById('decimalOutput');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
 
     // Initialize authentication (async)
@@ -71,20 +68,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Add event listener for vehicle search (moved from inline HTML)
         fetchBtn.addEventListener('click', searchVehicle);
-        
-        // Initialize hex-to-decimal converter
-        if (convertBtn && hexInput && decimalOutput) {
-            convertBtn.addEventListener('click', function() {
-                decimalOutput.value = hexToDecimal(hexInput.value);
-            });
-            
-            // Also convert on enter key in the input
-            hexInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    decimalOutput.value = hexToDecimal(hexInput.value);
-                }
-            });
-        }
         
         // Initialize export button
         if (exportCsvBtn) {
@@ -297,6 +280,31 @@ function initializeApp() {
         ]
     });
 
+    // Set up hex-to-decimal converter
+    document.addEventListener('DOMContentLoaded', function() {
+        const convertBtn = document.getElementById('convertBtn');
+        const hexInput = document.getElementById('hexInput');
+        const decimalOutput = document.getElementById('decimalOutput');
+        
+        if (convertBtn && hexInput && decimalOutput) {
+            convertBtn.addEventListener('click', function() {
+                decimalOutput.value = hexToDecimal(hexInput.value);
+            });
+            
+            // Also convert on enter key in the input
+            hexInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    decimalOutput.value = hexToDecimal(hexInput.value);
+                }
+            });
+        }
+    });
+    
+    // Set up CSV export button
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportToCsv);
+    }
+    
     // Initialize collapsible sections
     // Default state: converter collapsed (uncomment to start collapsed)
     // toggleConverter();
