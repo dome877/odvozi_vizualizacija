@@ -86,30 +86,6 @@ html, body {
     border-bottom: 1px solid #eaeaea;
 }
 
-/* Export container styling */
-.export-container {
-    padding: 15px;
-    border-bottom: 1px solid #eaeaea;
-}
-
-.export-container .button-container {
-    margin-top: 0;
-}
-
-.export-container button {
-    background-color: #2c3e50;
-    color: white;
-    border: none;
-    padding: 10px;
-    font-weight: 500;
-}
-
-.export-container button:hover {
-    background-color: #3498db;
-    color: white;
-    border: none;
-}
-
 /* Date picker styling */
 .date-picker {
     display: flex;
