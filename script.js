@@ -56,6 +56,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const exportCsvBtn = document.getElementById('exportCsvBtn');
     const rfidPolygonFilterCheckbox = document.getElementById('useRfidPolygonFilter');
     const showPolygonsCheckbox = document.getElementById('showPolygons');
+    const convertBtn = document.getElementById('convertBtn');
+    const hexInput = document.getElementById('hexInput');
+    const decimalOutput = document.getElementById('decimalOutput');
 
     // Initialize authentication (async)
     const isAuthenticated = await window.Auth.initAuth();
@@ -74,6 +77,20 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize export button
         if (exportCsvBtn) {
             exportCsvBtn.addEventListener('click', exportToCsv);
+        }
+        
+        // Initialize hex-to-decimal converter
+        if (convertBtn && hexInput && decimalOutput) {
+            convertBtn.addEventListener('click', function() {
+                decimalOutput.value = hexToDecimal(hexInput.value);
+            });
+            
+            // Also convert on enter key in the input
+            hexInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    decimalOutput.value = hexToDecimal(hexInput.value);
+                }
+            });
         }
         
         // Add event listener for RFID-Polygon filter toggle
@@ -135,7 +152,10 @@ function displayTokenInfo() {
 
 // Function to clear results
 function clearResults() {
-    statusSpan.textContent = 'Spremno';
+    const statusSpan = document.getElementById('status');
+    if (statusSpan) {
+        statusSpan.textContent = 'Spremno';
+    }
     
     // Clear map markers
     if (window.markersLayer) {
@@ -305,31 +325,6 @@ function initializeApp() {
         ]
     });
 
-    // Set up hex-to-decimal converter
-    document.addEventListener('DOMContentLoaded', function() {
-        const convertBtn = document.getElementById('convertBtn');
-        const hexInput = document.getElementById('hexInput');
-        const decimalOutput = document.getElementById('decimalOutput');
-        
-        if (convertBtn && hexInput && decimalOutput) {
-            convertBtn.addEventListener('click', function() {
-                decimalOutput.value = hexToDecimal(hexInput.value);
-            });
-            
-            // Also convert on enter key in the input
-            hexInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    decimalOutput.value = hexToDecimal(hexInput.value);
-                }
-            });
-        }
-    });
-    
-    // Set up CSV export button
-    if (exportCsvBtn) {
-        exportCsvBtn.addEventListener('click', exportToCsv);
-    }
-    
     // Initialize collapsible sections
     // Default state: converter collapsed (uncomment to start collapsed)
     // toggleConverter();
